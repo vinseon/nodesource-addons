@@ -14,21 +14,17 @@ apply plugin: 'java' // or 'groovy'. Must be explicitly applied
 apply plugin: 'com.github.johnrengelman.shadow'
 
 shadowJar {
-    dependencies {
-        include(dependency('com.sun.jersey:jersey-client:1.9.1'))
-        include(dependency('org.json:json:20151123'))
-    }
 }
 
 dependencies {
     compile 'com.sun.jersey:jersey-client:1.9.1'
     compile 'org.json:json:20151123'
     compile 'org.ow2.proactive:rm-server:7.1.2'
-    testCompile group: 'org.hamcrest', name: 'hamcrest-all', version:'1.1'
-    testCompile ('junit:junit:4.12') {
-            exclude module : 'hamcrest'
-            exclude module : 'hamcrest-core'
-        }
-    testCompile group: 'org.mockito', name: 'mockito-all', version:'1.9.5'
 }
+
+configurations {
+    /* We don't want the rm-server dependency in our shadowJar */
+    runtime.exclude module: 'rm-server'
+}
+
 
