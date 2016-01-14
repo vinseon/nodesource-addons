@@ -152,28 +152,35 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "" + numberOfInstances,
 				"" + cpu, "" + ram);
 
-		logger.info("instanceJson : " + instanceJson);
+		logger.info("InstanceJson : " + instanceJson);
 
-		Set<String> instancesId = connectorIaasClient.createInstances(instanceJson);
+		Set<String> instancesIds = connectorIaasClient.createInstances(instanceJson);
 
-		logger.info("instance id created : " + instancesId);
+		logger.info("Instances ids created : " + instancesIds);
 
-		for (String instanceId : instancesId) {
+		for (String instanceId : instancesIds) {
 			List<String> scripts = Lists.newArrayList(this.downloadCommand,
 					"nohup " + generateDefaultStartNodeCommand(instanceId) + "  &");
 			String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts);
 
 			executeScript(instanceId, instanceScriptJson);
-
 		}
 
 	}
 
 	private void executeScript(String instanceId, String instanceScriptJson) {
 		for (int index = 0; index < numberOfNodesPerInstance; index++) {
-			String scriptResult = connectorIaasClient.runScriptOnInstances(instanceId, instanceScriptJson);
-
-			logger.info("scriptResult for instance id " + instanceId + " : " + scriptResult);
+			String scriptResult = null;
+			try {
+				scriptResult = connectorIaasClient.runScriptOnInstances(instanceId, instanceScriptJson);
+				if (logger.isDebugEnabled()) {
+					logger.debug("Executed successfully script for instance id :" + instanceId + "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
+				} else {
+					logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
+				}
+			} catch (Exception e) {
+				logger.error("Error while executing script :\n" + instanceScriptJson, e);
+			}
 		}
 	}
 
