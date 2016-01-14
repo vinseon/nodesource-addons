@@ -1,0 +1,1 @@
+include 'infrastructures:rm-infrastructure-aws-ec2'
