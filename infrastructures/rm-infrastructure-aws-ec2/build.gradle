@@ -15,7 +15,8 @@ apply plugin: 'com.github.johnrengelman.shadow'
 
 shadowJar {
     dependencies {
-        exclude(dependency('org.ow2.proactive:rm-server:7.1.2'))
+        include(dependency('com.sun.jersey:jersey-client:1.9.1'))
+        include(dependency('org.json:json:20151123'))
     }
 }
 
