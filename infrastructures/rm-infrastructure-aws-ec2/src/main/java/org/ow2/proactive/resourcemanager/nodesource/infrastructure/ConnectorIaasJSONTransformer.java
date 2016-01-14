@@ -10,10 +10,12 @@ public class ConnectorIaasJSONTransformer {
 	private ConnectorIaasJSONTransformer() {
 	}
 
-	public static String getInfrastructureJSON(String infrastructureId, String type, String userName,
-			String credentials) {
-		return new JSONObject().put("id", infrastructureId).put("type", type).put("userName", userName)
-				.put("credential", credentials).toString();
+	public static String getInfrastructureJSON(String infrastructureId, String type, String username, String password) {
+		JSONObject credentials = new JSONObject();
+		credentials.put("username", username);
+		credentials.put("password", password);
+		return new JSONObject().put("id", infrastructureId).put("type", type).put("credentials", credentials)
+				.toString();
 	}
 
 	public static String getInstanceJSON(String tag, String image, String number, String cpu, String ram) {
