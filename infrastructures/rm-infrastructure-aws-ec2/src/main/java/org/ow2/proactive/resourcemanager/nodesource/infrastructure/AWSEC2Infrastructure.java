@@ -36,20 +36,21 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.log4j.Logger;
-import org.objectweb.proactive.core.ProActiveException;
-import org.objectweb.proactive.core.node.Node;
-import org.ow2.proactive.resourcemanager.exception.RMException;
-import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.apache.log4j.Logger;
+import org.objectweb.proactive.core.ProActiveException;
+import org.objectweb.proactive.core.node.Node;
+import org.ow2.proactive.resourcemanager.exception.RMException;
+import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class AWSEC2Infrastructure extends InfrastructureManager {
 
@@ -149,8 +150,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	@Override
 	public void acquireNode() {
 
-		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "" + numberOfInstances, "" + cpu, "" +
-				ram);
+		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "" + numberOfInstances,
+				"" + cpu, "" + ram);
 
 		logger.info("instanceJson : " + instanceJson);
 
@@ -217,7 +218,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		}
 	}
 
-	@Override
 	public String getDescription() {
 		return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
 	}
@@ -230,8 +230,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		return getDescription();
 	}
 
-	private void
-	validate(Object[] parameters) {
+	private void validate(Object[] parameters) {
 		if (parameters == null || parameters.length < 14) {
 			throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
 		}
@@ -305,7 +304,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 	private String generateDefaultDownloadCommand() {
 		if ("windows".equals(operatingSystem)) {
-			return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmDomain + "/rest/node.jar" + "', 'node.jar') }\"";
+			return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmDomain
+					+ "/rest/node.jar" + "', 'node.jar') }\"";
 		} else {
 			return "wget " + this.rmDomain + "/rest/node.jar";
 		}
@@ -315,7 +315,9 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		try {
 
 			String protocol = rmUrl.substring(0, rmUrl.indexOf(':')).trim();
-			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol + " -Dproactive.pamr.router.address=" + rmDomain + " -r " + rmUrl + "-s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol
+					+ " -Dproactive.pamr.router.address=" + rmDomain + " -r " + rmUrl + "-s " + nodeSource.getName()
+					+ " -w " + numberOfNodesPerInstance;
 		} catch (Exception e) {
 			return "java -jar node.jar -r " + rmUrl + "-s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
 		}
