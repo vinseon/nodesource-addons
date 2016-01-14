@@ -36,19 +36,20 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
 import org.objectweb.proactive.core.ProActiveException;
 import org.objectweb.proactive.core.node.Node;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AWSEC2Infrastructure extends InfrastructureManager {
 
@@ -60,40 +61,46 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	private static final Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
 
 	@Configurable(description = "The infrastructure unique id")
-	protected String infrastructureId = "aws-ec2-proactive";
+	protected String infrastructureId = null;
 
 	@Configurable(description = "The AWS_AKEY")
-	protected String aws_key = "AKIAIXZCJACIJA7YL3AQ";
+	protected String aws_key = null;
 
 	@Configurable(description = "The AWS_SKEY")
-	protected String aws_secret_key = "fMWyE93klwSIzLxO8wTAnGlQNdNHWForaN6hMOq+";
+	protected String aws_secret_key = null;
 
 	@Configurable(description = "Resource manager domain")
-	protected String rmDomain = "trydev.activeeon.com";
+	protected String rmDomain = generateDefaultRMDomain();
 
 	@Configurable(description = "Connector-iaas URL")
 	protected String connectorIaasURL = "http://localhost:8081/connector-iaas";
 
-	@Configurable(description = "Node to RM Connection Command")
-	protected String nodeToRMConnectionCommand = "java -jar node.jar -Dproactive.communication.protocol=pamr -Dproactive.pamr.router.address=trydev.activeeon.com    -r pamr://4096/";
-
 	@Configurable(description = "Instance tag")
-	protected String instanceTag = "proactive-instance";
+	protected String instanceTag = null;
 
 	@Configurable(description = "Image")
-	protected String image = "eu-central-1/ami-bc1021a1";
+	protected String image = null;
 
 	@Configurable(description = "Total instance to create")
-	protected String numberOfInstances = "1";
+	protected int numberOfInstances = 1;
 
 	@Configurable(description = "Total nodes to create per instance")
 	protected int numberOfNodesPerInstance = 1;
 
-	@Configurable(description = "RAM")
-	protected String ram = "512";
+	@Configurable(description = "Target Operating System (windows/linux/mac)")
+	protected String operatingSystem = "linux";
+
+	@Configurable(description = "Command used to download the worker jar")
+	protected String downloadCommand = generateDefaultDownloadCommand();
+
+	@Configurable(description = "Start ProActive Node command")
+	protected String nodeToRMConnectionCommand = generateDefaultStartNodeCommand();
+
+	@Configurable(description = "RAM (in Mega Bytes))")
+	protected int ram = 512;
 
 	@Configurable(description = "CPU")
-	protected String cpu = "1";
+	protected int cpu = 1;
 
 	private ConnectorIaasClient connectorIaasClient;
 
@@ -109,21 +116,23 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	@Override
 	protected void configure(Object... parameters) {
 
-		logger.info("Valiodating parameters : " + parameters);
+		logger.info("Validating parameters : " + parameters);
 		validate(parameters);
 
-		this.infrastructureId = parameters[0].toString();
-		this.aws_key = parameters[1].toString();
-		this.aws_secret_key = parameters[2].toString();
-		this.rmDomain = parameters[3].toString();
-		this.connectorIaasURL = parameters[4].toString();
-		this.nodeToRMConnectionCommand = parameters[5].toString();
-		this.instanceTag = parameters[6].toString();
-		this.image = parameters[7].toString();
-		this.numberOfInstances = parameters[8].toString();
-		this.numberOfNodesPerInstance = Integer.parseInt(parameters[9].toString());
-		this.ram = parameters[10].toString();
-		this.cpu = parameters[11].toString();
+		this.infrastructureId = parameters[0].toString().trim();
+		this.aws_key = parameters[1].toString().trim();
+		this.aws_secret_key = parameters[2].toString().trim();
+		this.rmDomain = parameters[3].toString().trim();
+		this.connectorIaasURL = parameters[4].toString().trim();
+		this.instanceTag = parameters[5].toString().trim();
+		this.image = parameters[6].toString().trim();
+		this.numberOfInstances = Integer.parseInt(parameters[7].toString().trim());
+		this.numberOfNodesPerInstance = Integer.parseInt(parameters[8].toString().trim());
+		this.operatingSystem = parameters[9].toString().trim();
+		this.downloadCommand = parameters[10].toString().trim();
+		this.nodeToRMConnectionCommand = parameters[11].toString().trim();
+		this.ram = Integer.parseInt(parameters[12].toString().trim());
+		this.cpu = Integer.parseInt(parameters[13].toString().trim());
 
 		String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
 				INFRASTRUCTURE_TYPE, aws_key, aws_secret_key);
@@ -140,7 +149,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	@Override
 	public void acquireNode() {
 
-		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, numberOfInstances, cpu,
+		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "" + numberOfInstances, "" + cpu, "" +
 				ram);
 
 		logger.info("instanceJson : " + instanceJson);
@@ -150,7 +159,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		logger.info("instance id created : " + instancesId);
 
 		for (String instanceId : instancesId) {
-			List<String> scripts = Lists.newArrayList("wget " + this.rmDomain + "/rest/node.jar",
+			List<String> scripts = Lists.newArrayList(this.downloadCommand,
 					"nohup " + this.nodeToRMConnectionCommand + " -DinstanceId=" + instanceId + "  &");
 			String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts);
 
@@ -208,6 +217,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		}
 	}
 
+	@Override
 	public String getDescription() {
 		return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
 	}
@@ -220,8 +230,9 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		return getDescription();
 	}
 
-	private void validate(Object[] parameters) {
-		if (parameters == null || parameters.length < 10) {
+	private void
+	validate(Object[] parameters) {
+		if (parameters == null || parameters.length < 14) {
 			throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
 		}
 
@@ -246,33 +257,68 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		}
 
 		if (parameters[5] == null) {
-			throw new IllegalArgumentException("The Connection command must be specified");
-		}
-
-		if (parameters[6] == null) {
 			throw new IllegalArgumentException("The instance tag must be specified");
 		}
 
-		if (parameters[7] == null) {
+		if (parameters[6] == null) {
 			throw new IllegalArgumentException("The image id must be specified");
 		}
 
-		if (parameters[8] == null) {
+		if (parameters[7] == null) {
 			throw new IllegalArgumentException("The number of instances to create must be specified");
 		}
 
-		if (parameters[9] == null) {
+		if (parameters[8] == null) {
 			throw new IllegalArgumentException("The number of nodes per instance to deploy must be specified");
 		}
 
+		if (parameters[9] == null) {
+			throw new IllegalArgumentException("The operating system must be specified");
+		}
+
 		if (parameters[10] == null) {
-			throw new IllegalArgumentException("The amount of RAM must be specified");
+			throw new IllegalArgumentException("The download node.jar command must be specified");
 		}
 
 		if (parameters[11] == null) {
+			throw new IllegalArgumentException("The start ProActive Node command must be specified");
+		}
+
+		if (parameters[12] == null) {
+			throw new IllegalArgumentException("The amount of RAM must be specified");
+		}
+
+		if (parameters[13] == null) {
 			throw new IllegalArgumentException("The CPU must be specified");
 		}
 
+	}
+
+	private String generateDefaultRMDomain() {
+		try {
+			// best effort, may not work for all machines
+			return InetAddress.getLocalHost().getCanonicalHostName();
+		} catch (UnknownHostException e) {
+			return "localhost";
+		}
+	}
+
+	private String generateDefaultDownloadCommand() {
+		if ("windows".equals(operatingSystem)) {
+			return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmDomain + "/rest/node.jar" + "', 'node.jar') }\"";
+		} else {
+			return "wget " + this.rmDomain + "/rest/node.jar";
+		}
+	}
+
+	private String generateDefaultStartNodeCommand() {
+		try {
+
+			String protocol = rmUrl.substring(0, rmUrl.indexOf(':')).trim();
+			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol + " -Dproactive.pamr.router.address=" + rmDomain + " -r " + rmUrl + "-s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+		} catch (Exception e) {
+			return "java -jar node.jar -r " + rmUrl + "-s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+		}
 	}
 
 	private String getInstanceIdProperty(Node node) throws RMException {
