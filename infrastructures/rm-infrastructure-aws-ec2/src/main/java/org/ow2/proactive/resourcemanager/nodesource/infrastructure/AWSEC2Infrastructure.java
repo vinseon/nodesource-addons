@@ -60,9 +60,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	/** logger */
 	private static final Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
 
-	@Configurable(description = "The infrastructure unique id")
-	protected String infrastructureId = null;
-
 	@Configurable(description = "The AWS_AKEY")
 	protected String aws_key = null;
 
@@ -74,9 +71,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 	@Configurable(description = "Connector-iaas URL")
 	protected String connectorIaasURL = "http://localhost:8081/connector-iaas";
-
-	@Configurable(description = "Instance tag")
-	protected String instanceTag = "proactive";
 
 	@Configurable(description = "Image")
 	protected String image = null;
@@ -105,7 +99,9 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	@Configurable(description = "Alternate Resource Manager url (if we don't want to use the default one, for example in case of multi-protocol")
 	protected String alternateRMURL = "";
 
-	private ConnectorIaasClient connectorIaasClient;
+	protected String infrastructureId = null;
+
+	private ConnectorIaasClient connectorIaasClient = null;
 
 	private final Map<String, Set<String>> nodesPerInstances;
 
@@ -122,107 +118,112 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		logger.info("Validating parameters : " + parameters);
 		validate(parameters);
 
-		this.infrastructureId = parameters[0].toString().trim();
-		this.aws_key = parameters[1].toString().trim();
-		this.aws_secret_key = parameters[2].toString().trim();
-		this.rmDomain = parameters[3].toString().trim();
-		this.connectorIaasURL = parameters[4].toString().trim();
-		this.instanceTag = parameters[5].toString().trim();
-		this.image = parameters[6].toString().trim();
-		this.numberOfInstances = Integer.parseInt(parameters[7].toString().trim());
-		this.numberOfNodesPerInstance = Integer.parseInt(parameters[8].toString().trim());
-		this.operatingSystem = parameters[9].toString().trim();
-		this.downloadCommand = parameters[10].toString().trim();
-		this.additionalProperties = (parameters[11] != null )? parameters[11].toString().trim() : "";
-		this.ram = Integer.parseInt(parameters[12].toString().trim());
-		this.cpu = Integer.parseInt(parameters[13].toString().trim());
-		this.alternateRMURL = parameters[14].toString().trim();
-
-		String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
-				INFRASTRUCTURE_TYPE, aws_key, aws_secret_key);
-
-		logger.info("creating infrastructure : " + infrastructureJson);
-
-		connectorIaasClient = new ConnectorIaasClient(ConnectorIaasClient.jerseyClient, connectorIaasURL,
-				infrastructureId, infrastructureJson);
-
-		logger.info("Infrastructure created");
+		this.aws_key = parameters[0].toString().trim();
+		this.aws_secret_key = parameters[1].toString().trim();
+		this.rmDomain = parameters[2].toString().trim();
+		this.connectorIaasURL = parameters[3].toString().trim();
+		this.image = parameters[4].toString().trim();
+		this.numberOfInstances = Integer.parseInt(parameters[5].toString().trim());
+		this.numberOfNodesPerInstance = Integer.parseInt(parameters[6].toString().trim());
+		this.operatingSystem = parameters[7].toString().trim();
+		this.downloadCommand = parameters[8].toString().trim();
+		this.additionalProperties = parameters[9].toString().trim();
+		this.ram = Integer.parseInt(parameters[10].toString().trim());
+		this.cpu = Integer.parseInt(parameters[11].toString().trim());
+		this.alternateRMURL = parameters[12].toString().trim();
 
 	}
 
 	private void validate(Object[] parameters) {
-		if (parameters == null || parameters.length < 15) {
+		if (parameters == null || parameters.length < 13) {
 			throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
 		}
 
 		if (parameters[0] == null) {
-			throw new IllegalArgumentException("The infrastructure id must be specified");
-		} else if (parameters[0].toString().trim().contains(" ")) {
-			throw new IllegalArgumentException("The infrastructure id must not contain spaces");
-		}
-
-		if (parameters[1] == null) {
 			throw new IllegalArgumentException("EC2 key must be specified");
 		}
 
-		if (parameters[2] == null) {
+		if (parameters[1] == null) {
 			throw new IllegalArgumentException("EC2 secret key  must be specified");
 		}
 
-		if (parameters[3] == null) {
+		if (parameters[2] == null) {
 			throw new IllegalArgumentException("The Resource manager domain must be specified");
 		}
 
-		if (parameters[4] == null) {
+		if (parameters[3] == null) {
 			throw new IllegalArgumentException("The connector-iaas URL must be specified");
 		}
 
-		if (parameters[5] == null) {
-			throw new IllegalArgumentException("The instance tag must be specified");
-		}
-
-		if (parameters[6] == null) {
+		if (parameters[4] == null) {
 			throw new IllegalArgumentException("The image id must be specified");
 		}
 
-		if (parameters[7] == null) {
+		if (parameters[5] == null) {
 			throw new IllegalArgumentException("The number of instances to create must be specified");
 		}
 
-		if (parameters[8] == null) {
+		if (parameters[6] == null) {
 			throw new IllegalArgumentException("The number of nodes per instance to deploy must be specified");
 		}
 
-		if (parameters[9] == null) {
+		if (parameters[7] == null) {
 			throw new IllegalArgumentException("The operating system must be specified");
+		} else {
+			switch (parameters[7].toString().trim()) {
+				case "linux":
+				case "windows":
+				case "mac":
+					break;
+				default:
+					throw new IllegalArgumentException("Invalid operating system name : \"" + parameters[7].toString().trim() + "\"");
+			}
 		}
 
-		if (parameters[10] == null) {
+		if (parameters[8] == null) {
 			throw new IllegalArgumentException("The download node.jar command must be specified");
 		}
 
-		if (parameters[11] == null) {
-			parameters[11] = "";
+		if (parameters[9] == null) {
+			parameters[9] = "";
 		}
 
-		if (parameters[12] == null) {
+		if (parameters[10] == null) {
 			throw new IllegalArgumentException("The amount of RAM must be specified");
 		}
 
-		if (parameters[13] == null) {
+		if (parameters[11] == null) {
 			throw new IllegalArgumentException("The CPU must be specified");
 		}
 
-		if (parameters[14] == null) {
-			parameters[14] = "";
+		if (parameters[12] == null) {
+			parameters[12] = "";
 		}
 
+	}
+
+	private void connectToConnectorIaas() {
+		if (connectorIaasClient == null) {
+			infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
+
+			String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
+					INFRASTRUCTURE_TYPE, aws_key, aws_secret_key);
+
+			logger.info("Creating infrastructure : " + infrastructureJson);
+
+			connectorIaasClient = new ConnectorIaasClient(ConnectorIaasClient.jerseyClient, connectorIaasURL,
+					infrastructureId, infrastructureJson);
+
+			logger.info("Infrastructure created");
+		}
 	}
 
 	@Override
 	public void acquireNode() {
 
-		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "" + numberOfInstances,
+		connectToConnectorIaas();
+
+		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image, "" + numberOfInstances,
 				"" + cpu, "" + ram);
 
 		logger.info("InstanceJson : " + instanceJson);
@@ -274,9 +275,12 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 		synchronized (this) {
 			nodesPerInstances.get(instanceId).remove(node.getNodeInformation().getName());
+			logger.info("Removed node : " + node.getNodeInformation().getName());
 
 			if (nodesPerInstances.get(instanceId).isEmpty()) {
 				connectorIaasClient.terminateInstance(instanceId);
+				nodesPerInstances.remove(instanceId);
+				logger.info("Removed instance : " + instanceId);
 			}
 		}
 
