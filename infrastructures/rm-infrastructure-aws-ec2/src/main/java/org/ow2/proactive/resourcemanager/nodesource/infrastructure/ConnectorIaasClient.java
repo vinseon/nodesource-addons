@@ -1,16 +1,15 @@
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import java.util.Iterator;
-import java.util.Set;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import com.google.common.collect.Sets;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.ClientResponse.Status;
 import com.sun.jersey.api.client.WebResource;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.Iterator;
+import java.util.Set;
 
 public class ConnectorIaasClient {
 
@@ -58,7 +57,7 @@ public class ConnectorIaasClient {
 		instancesWebResource.queryParam("instanceId", instanceId).accept("application/json").delete();
 	}
 
-	public String runScriptOnInstances(String instanceId, String instanceScriptJson) {
+	public String runScriptOnInstance(String instanceId, String instanceScriptJson) {
 		return checkResponseIsOK(scriptsWebResource.queryParam("instanceId", instanceId).type("application/json")
 				.post(ClientResponse.class, instanceScriptJson)).getEntity(String.class);
 	}

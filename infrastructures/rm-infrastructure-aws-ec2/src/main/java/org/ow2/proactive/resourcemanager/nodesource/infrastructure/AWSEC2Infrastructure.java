@@ -150,96 +150,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 	}
 
-	@Override
-	public void acquireNode() {
-
-		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "" + numberOfInstances,
-				"" + cpu, "" + ram);
-
-		logger.info("InstanceJson : " + instanceJson);
-
-		Set<String> instancesIds = connectorIaasClient.createInstances(instanceJson);
-
-		logger.info("Instances ids created : " + instancesIds);
-
-		for (String instanceId : instancesIds) {
-			List<String> scripts = Lists.newArrayList(this.downloadCommand,
-					"nohup " + generateDefaultStartNodeCommand(instanceId) + "  &");
-			String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts);
-
-			executeScript(instanceId, instanceScriptJson);
-		}
-
-	}
-
-	private void executeScript(String instanceId, String instanceScriptJson) {
-		for (int index = 0; index < numberOfNodesPerInstance; index++) {
-			String scriptResult = null;
-			try {
-				scriptResult = connectorIaasClient.runScriptOnInstances(instanceId, instanceScriptJson);
-				if (logger.isDebugEnabled()) {
-					logger.debug("Executed successfully script for instance id :" + instanceId + "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
-				} else {
-					logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
-				}
-			} catch (Exception e) {
-				logger.error("Error while executing script :\n" + instanceScriptJson, e);
-			}
-		}
-	}
-
-	@Override
-	public void acquireAllNodes() {
-		acquireNode();
-	}
-
-	@Override
-	public void removeNode(Node node) throws RMException {
-
-		String instanceId = getInstanceIdProperty(node);
-
-		try {
-			node.getProActiveRuntime().killNode(node.getNodeInformation().getName());
-
-		} catch (ProActiveException e) {
-			throw new RMException(e);
-		}
-
-		synchronized (this) {
-			nodesPerInstances.get(instanceId).remove(node.getNodeInformation().getName());
-
-			if (nodesPerInstances.get(instanceId).isEmpty()) {
-				connectorIaasClient.terminateInstance(instanceId);
-			}
-		}
-
-	}
-
-	@Override
-	protected void notifyAcquiredNode(Node node) throws RMException {
-
-		String instanceId = getInstanceIdProperty(node);
-
-		synchronized (this) {
-			if (!nodesPerInstances.containsKey(instanceId)) {
-				nodesPerInstances.put(instanceId, new HashSet<String>());
-			}
-			nodesPerInstances.get(instanceId).add(node.getNodeInformation().getName());
-		}
-	}
-
-	public String getDescription() {
-		return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String toString() {
-		return getDescription();
-	}
-
 	private void validate(Object[] parameters) {
 		if (parameters == null || parameters.length < 15) {
 			throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
@@ -307,8 +217,96 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			parameters[14] = "";
 		}
 
+	}
+
+	@Override
+	public void acquireNode() {
+
+		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "" + numberOfInstances,
+				"" + cpu, "" + ram);
+
+		logger.info("InstanceJson : " + instanceJson);
+
+		Set<String> instancesIds = connectorIaasClient.createInstances(instanceJson);
+
+		logger.info("Instances ids created : " + instancesIds);
+
+		for (String instanceId : instancesIds) {
+			List<String> scripts = Lists.newArrayList(this.downloadCommand,
+					"nohup " + generateDefaultStartNodeCommand(instanceId) + "  &");
+			String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts);
+
+			executeScript(instanceId, instanceScriptJson);
+		}
 
 	}
+
+	private void executeScript(String instanceId, String instanceScriptJson) {
+		String scriptResult = null;
+		try {
+			scriptResult = connectorIaasClient.runScriptOnInstance(instanceId, instanceScriptJson);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Executed successfully script for instance id :" + instanceId + "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
+			} else {
+				logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
+			}
+		} catch (Exception e) {
+			logger.error("Error while executing script :\n" + instanceScriptJson, e);
+		}
+	}
+
+	@Override
+	public void acquireAllNodes() {
+		acquireNode();
+	}
+
+	@Override
+	public void removeNode(Node node) throws RMException {
+
+		String instanceId = getInstanceIdProperty(node);
+
+		try {
+			node.getProActiveRuntime().killNode(node.getNodeInformation().getName());
+
+		} catch (ProActiveException e) {
+			throw new RMException(e);
+		}
+
+		synchronized (this) {
+			nodesPerInstances.get(instanceId).remove(node.getNodeInformation().getName());
+
+			if (nodesPerInstances.get(instanceId).isEmpty()) {
+				connectorIaasClient.terminateInstance(instanceId);
+			}
+		}
+
+	}
+
+	@Override
+	protected void notifyAcquiredNode(Node node) throws RMException {
+
+		String instanceId = getInstanceIdProperty(node);
+
+		synchronized (this) {
+			if (!nodesPerInstances.containsKey(instanceId)) {
+				nodesPerInstances.put(instanceId, new HashSet<String>());
+			}
+			nodesPerInstances.get(instanceId).add(node.getNodeInformation().getName());
+		}
+	}
+
+	public String getDescription() {
+		return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public String toString() {
+		return getDescription();
+	}
+
 
 	private String generateDefaultRMDomain() {
 		try {
