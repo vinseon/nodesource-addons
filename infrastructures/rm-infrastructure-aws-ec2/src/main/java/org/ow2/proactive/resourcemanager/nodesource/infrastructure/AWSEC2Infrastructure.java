@@ -327,7 +327,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmDomain
 					+ "/rest/node.jar" + "', 'node.jar') }\"";
 		} else {
-			return "wget " + this.rmDomain + "/rest/node.jar";
+			return "wget -nv " + this.rmDomain + "/rest/node.jar";
 		}
 	}
 
