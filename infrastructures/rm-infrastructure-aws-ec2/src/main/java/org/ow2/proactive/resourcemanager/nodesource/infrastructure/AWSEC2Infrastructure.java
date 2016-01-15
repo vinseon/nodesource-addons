@@ -58,7 +58,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	private static final String INFRASTRUCTURE_TYPE = "aws-ec2";
 
 	/** logger */
-	private static final jdk.internal.instrumentation.Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
+	private static final Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
 
 	@Configurable(description = "The infrastructure unique id")
 	protected String infrastructureId = null;
