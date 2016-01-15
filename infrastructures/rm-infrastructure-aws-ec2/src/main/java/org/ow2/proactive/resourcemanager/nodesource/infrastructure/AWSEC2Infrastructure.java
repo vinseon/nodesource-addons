@@ -102,6 +102,9 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	@Configurable(description = "CPU")
 	protected int cpu = 1;
 
+	@Configurable(description = "Alternate Resource Manager url (if we don't want to use the default one, for example in case of multi-protocol")
+	protected String alternateRMURL = "";
+
 	private ConnectorIaasClient connectorIaasClient;
 
 	private final Map<String, Set<String>> nodesPerInstances;
@@ -133,6 +136,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		this.additionalProperties = (parameters[11] != null )? parameters[11].toString().trim() : "";
 		this.ram = Integer.parseInt(parameters[12].toString().trim());
 		this.cpu = Integer.parseInt(parameters[13].toString().trim());
+		this.alternateRMURL = parameters[14].toString().trim();
 
 		String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
 				INFRASTRUCTURE_TYPE, aws_key, aws_secret_key);
@@ -237,7 +241,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	}
 
 	private void validate(Object[] parameters) {
-		if (parameters == null || parameters.length < 14) {
+		if (parameters == null || parameters.length < 15) {
 			throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
 		}
 
@@ -288,7 +292,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		}
 
 		if (parameters[11] == null) {
-			// can be empty
+			parameters[11] = "";
 		}
 
 		if (parameters[12] == null) {
@@ -298,6 +302,11 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		if (parameters[13] == null) {
 			throw new IllegalArgumentException("The CPU must be specified");
 		}
+
+		if (parameters[14] == null) {
+			parameters[14] = "";
+		}
+
 
 	}
 
@@ -322,13 +331,16 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 	private String generateDefaultStartNodeCommand(String instanceId) {
 		try {
-
-			String protocol = rmUrl.substring(0, rmUrl.indexOf(':')).trim();
+			String rmUrlToUse = rmUrl;
+			if ((alternateRMURL != null) && (!alternateRMURL.isEmpty())) {
+				rmUrlToUse = alternateRMURL;
+			}
+			String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
 			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol
-					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName()
+					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName()
 					+ " -w " + numberOfNodesPerInstance;
 		} catch (Exception e) {
-			logger.error("Exception when generating the command, fallback on default value",e);
+			logger.error("Exception when generating the command, fallback on default value", e);
 			return "java -jar node.jar -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
 		}
 	}
