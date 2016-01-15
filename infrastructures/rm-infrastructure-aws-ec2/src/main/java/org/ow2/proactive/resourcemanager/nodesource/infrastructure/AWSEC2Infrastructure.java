@@ -328,8 +328,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName()
 					+ " -w " + numberOfNodesPerInstance;
 		} catch (Exception e) {
-			logger.warn("Exception when generating the command, fallback on default value",e);
-			return "java -jar node.jar -DinstanceId=" + instanceId + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+			logger.error("Exception when generating the command, fallback on default value",e);
+			return "java -jar node.jar -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
 		}
 	}
 
