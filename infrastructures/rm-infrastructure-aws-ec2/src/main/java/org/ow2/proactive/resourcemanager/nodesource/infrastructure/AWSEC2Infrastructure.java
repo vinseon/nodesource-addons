@@ -76,7 +76,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	protected String connectorIaasURL = "http://localhost:8081/connector-iaas";
 
 	@Configurable(description = "Instance tag")
-	protected String instanceTag = null;
+	protected String instanceTag = "proactive";
 
 	@Configurable(description = "Image")
 	protected String image = null;
@@ -243,6 +243,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 		if (parameters[0] == null) {
 			throw new IllegalArgumentException("The infrastructure id must be specified");
+		} else if (parameters[0].toString().trim().contains(" ")) {
+			throw new IllegalArgumentException("The infrastructure id must not contain spaces");
 		}
 
 		if (parameters[1] == null) {
@@ -323,11 +325,11 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 			String protocol = rmUrl.substring(0, rmUrl.indexOf(':')).trim();
 			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol
-					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " " + additionalProperties +" -r " + rmUrl + "-s " + nodeSource.getName()
+					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName()
 					+ " -w " + numberOfNodesPerInstance;
 		} catch (Exception e) {
 			logger.warn("Exception when generating the command, fallback on default value",e);
-			return "java -jar node.jar -DinstanceId=" + instanceId + " -r " + rmUrl + "-s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+			return "java -jar node.jar -DinstanceId=" + instanceId + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
 		}
 	}
 
