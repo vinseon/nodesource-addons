@@ -343,7 +343,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 					+ " -w " + numberOfNodesPerInstance;
 		} catch (Exception e) {
 			logger.error("Exception when generating the command, fallback on default value", e);
-			return "java -jar node.jar -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+			return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
 		}
 	}
 
