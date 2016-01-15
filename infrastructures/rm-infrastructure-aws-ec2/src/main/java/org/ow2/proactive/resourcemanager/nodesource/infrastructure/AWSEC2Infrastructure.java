@@ -269,7 +269,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		try {
 			node.getProActiveRuntime().killNode(node.getNodeInformation().getName());
 
-		} catch (ProActiveException e) {
+		} catch (Exception e) {
 			logger.warn(e);
 		}
 
