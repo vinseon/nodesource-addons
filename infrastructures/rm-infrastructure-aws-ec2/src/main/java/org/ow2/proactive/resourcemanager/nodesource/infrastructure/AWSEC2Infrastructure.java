@@ -36,20 +36,18 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.log4j.Logger;
-import org.objectweb.proactive.core.ProActiveException;
-import org.objectweb.proactive.core.node.Node;
-import org.ow2.proactive.resourcemanager.exception.RMException;
-import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.ow2.proactive.resourcemanager.exception.RMException;
+import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 public class AWSEC2Infrastructure extends InfrastructureManager {
 
@@ -58,7 +56,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	private static final String INFRASTRUCTURE_TYPE = "aws-ec2";
 
 	/** logger */
-	private static final Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
+	private static final jdk.internal.instrumentation.Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
 
 	@Configurable(description = "The infrastructure unique id")
 	protected String infrastructureId = null;
@@ -133,7 +131,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		this.numberOfNodesPerInstance = Integer.parseInt(parameters[8].toString().trim());
 		this.operatingSystem = parameters[9].toString().trim();
 		this.downloadCommand = parameters[10].toString().trim();
-		this.additionalProperties = (parameters[11] != null )? parameters[11].toString().trim() : "";
+		this.additionalProperties = (parameters[11] != null) ? parameters[11].toString().trim() : "";
 		this.ram = Integer.parseInt(parameters[12].toString().trim());
 		this.cpu = Integer.parseInt(parameters[13].toString().trim());
 		this.alternateRMURL = parameters[14].toString().trim();
@@ -246,7 +244,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		try {
 			scriptResult = connectorIaasClient.runScriptOnInstance(instanceId, instanceScriptJson);
 			if (logger.isDebugEnabled()) {
-				logger.debug("Executed successfully script for instance id :" + instanceId + "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
+				logger.debug("Executed successfully script for instance id :" + instanceId + "\nScript contents : "
+						+ instanceScriptJson + " \nResult : " + scriptResult);
 			} else {
 				logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
 			}
@@ -269,7 +268,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			node.getProActiveRuntime().killNode(node.getNodeInformation().getName());
 
 		} catch (ProActiveException e) {
-			throw new RMException(e);
+			logger.warn(e);
 		}
 
 		synchronized (this) {
@@ -307,7 +306,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		return getDescription();
 	}
 
-
 	private String generateDefaultRMDomain() {
 		try {
 			// best effort, may not work for all machines
@@ -335,11 +333,13 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			}
 			String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
 			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol
-					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName()
-					+ " -w " + numberOfNodesPerInstance;
+					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " "
+					+ additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName() + " -w "
+					+ numberOfNodesPerInstance;
 		} catch (Exception e) {
 			logger.error("Exception when generating the command, fallback on default value", e);
-			return "java -jar node.jar -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+			return "java -jar node.jar -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrl
+					+ " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
 		}
 	}
 
