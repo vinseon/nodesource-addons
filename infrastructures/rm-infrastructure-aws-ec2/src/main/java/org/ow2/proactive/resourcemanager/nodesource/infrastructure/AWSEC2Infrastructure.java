@@ -339,7 +339,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			}
 			String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
 			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol
-					+ " -Dproactive.pamr.router.address=" + rmDomain + " -DinstanceId=" + instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName()
+					+ " -Dproactive.pamr.router.address=" + rmDomain + " -D"+INSTANCE_ID_NODE_PROPERTY+"=" + instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName()
 					+ " -w " + numberOfNodesPerInstance;
 		} catch (Exception e) {
 			logger.error("Exception when generating the command, fallback on default value", e);
