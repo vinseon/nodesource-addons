@@ -22,6 +22,12 @@ public class RestClient {
 				infrastructuresWebResource.type("application/json").post(ClientResponse.class, infrastructureJson));
 	}
 
+	public void deleteInfrastructuresWebResource(String infrastructureId) {
+		WebResource infrastructuresWebResource = jerseyClient.resource(connectorIaasURL + "/infrastructures/" + infrastructureId );
+		infrastructuresWebResource.type("application/json").delete();
+	}
+
+
 	public String postToInstancesWebResource(String infrastructureId, String instanceJson) {
 		WebResource instancesWebResource = jerseyClient
 				.resource(connectorIaasURL + "/infrastructures/" + infrastructureId + "/instances");

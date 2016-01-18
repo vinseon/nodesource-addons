@@ -1,12 +1,11 @@
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import java.util.Iterator;
-import java.util.Set;
-
+import com.google.common.collect.Sets;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.google.common.collect.Sets;
+import java.util.Iterator;
+import java.util.Set;
 
 public class ConnectorIaasClient {
 
@@ -42,6 +41,10 @@ public class ConnectorIaasClient {
 
 	public void terminateInstance(String infrastructureId, String instanceId) {
 		restClient.deleteToInstancesWebResource(infrastructureId, "instanceId", instanceId);
+	}
+
+	public void terminateInfrastructure(String infrastructureId) {
+		restClient.deleteInfrastructuresWebResource(infrastructureId);
 	}
 
 	public String runScriptOnInstance(String infrastructureId, String instanceId, String instanceScriptJson) {

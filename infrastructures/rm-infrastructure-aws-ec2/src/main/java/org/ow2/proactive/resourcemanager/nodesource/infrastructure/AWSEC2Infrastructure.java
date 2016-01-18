@@ -36,21 +36,20 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.log4j.Logger;
 import org.objectweb.proactive.core.ProActiveException;
 import org.objectweb.proactive.core.node.Node;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class AWSEC2Infrastructure extends InfrastructureManager {
 
@@ -279,7 +278,16 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 				logger.info("Removed instance : " + instanceId);
 			}
 		}
+	}
 
+	@Override
+	public void shutDown() {
+		logger.info("Terminating the infrastructure: " + infrastructureId);
+		synchronized (this) {
+			connectorIaasClient.terminateInfrastructure(infrastructureId);
+			nodesPerInstances.clear();
+		}
+		logger.info("Infrastructure: " + infrastructureId + " terminated");
 	}
 
 	@Override
