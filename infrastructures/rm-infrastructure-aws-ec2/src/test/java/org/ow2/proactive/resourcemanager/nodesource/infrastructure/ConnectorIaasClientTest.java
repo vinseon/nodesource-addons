@@ -81,6 +81,15 @@ public class ConnectorIaasClientTest {
 	}
 
 	@Test
+	public void testTerminateInfrastructure() {
+
+		connectorIaasClient.terminateInfrastructure("infra123");
+
+		Mockito.verify(restClient).deleteInfrastructuresWebResource("infra123");
+
+	}
+
+	@Test
 	public void testRunScriptOnInstance() {
 
 		connectorIaasClient.runScriptOnInstance("infra123", "123456", "somescriptjason");

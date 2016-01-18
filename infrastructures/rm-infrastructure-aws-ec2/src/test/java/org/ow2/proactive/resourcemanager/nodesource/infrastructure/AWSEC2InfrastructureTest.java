@@ -185,4 +185,22 @@ public class AWSEC2InfrastructureTest {
 				is("Handles nodes from the Amazon Elastic Compute Cloud Service."));
 	}
 
+	@Test
+	public void testshutdown() {
+		awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
+				"http://localhost:8088/connector-iaas", "aws-image", "2", "3", "mac",
+				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+
+		awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
+		awsec2Infrastructure.infrastructureId = "nodename";
+
+		awsec2Infrastructure.nodesPerInstances.put("123", Sets.newHashSet("nodeurl"));
+
+		awsec2Infrastructure.shutDown();
+
+		assertThat(awsec2Infrastructure.nodesPerInstances.isEmpty(), is(true));
+
+		verify(connectorIaasClient).terminateInfrastructure("nodename");
+	}
+
 }
