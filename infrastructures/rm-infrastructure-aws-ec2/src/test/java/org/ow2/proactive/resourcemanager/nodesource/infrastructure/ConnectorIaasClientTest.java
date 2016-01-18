@@ -1,60 +1,91 @@
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.WebResource.Builder;
+import com.google.common.collect.Sets;
 
 public class ConnectorIaasClientTest {
 
 	private ConnectorIaasClient connectorIaasClient;
 
+	private final String infrastructureJson = "{id=\"123\"}";
+
 	@Mock
-	private Client jerseyClientMock;
-	@Mock
-	private WebResource infrastructuresWebResourceMock;
-	@Mock
-	private WebResource instancesWebResourceMock;
-	@Mock
-	private WebResource scriptsWebResourceMock;
-	@Mock
-	private Builder resourceBuilderMock;
-	@Mock
-	private ClientResponse responseMock;
+	private RestClient restClient;
 
 	@Before
 	public void init() {
 		MockitoAnnotations.initMocks(this);
 
-		String connectorIaasUrl = "connectorIaasUrl";
-		String infrastructureId = "123";
-		String infrastructureJson = "{id=\"123\"}";
+		connectorIaasClient = new ConnectorIaasClient(restClient);
+	}
 
-		Mockito.when(jerseyClientMock.resource(connectorIaasUrl + "/infrastructures"))
-				.thenReturn(infrastructuresWebResourceMock);
-		Mockito.when(
-				jerseyClientMock.resource(connectorIaasUrl + "/infrastructures/" + infrastructureId + "/instances"))
-				.thenReturn(infrastructuresWebResourceMock);
-		Mockito.when(jerseyClientMock
-				.resource(connectorIaasUrl + "/infrastructures/" + infrastructureId + "/instance/scripts"))
-				.thenReturn(infrastructuresWebResourceMock);
+	@Test
+	public void testCreateInfrastructure() {
 
-		Mockito.when(infrastructuresWebResourceMock.type("application/json")).thenReturn(resourceBuilderMock);
+		Mockito.when(restClient.postToInfrastructuresWebResource(infrastructureJson))
+				.thenReturn("{'infrastructureId' : 'infra123'}");
+		connectorIaasClient.createInfrastructure(infrastructureJson);
 
-		Mockito.when(resourceBuilderMock.post(ClientResponse.class, infrastructureJson)).thenReturn(responseMock);
-
-		connectorIaasClient = new ConnectorIaasClient(jerseyClientMock, connectorIaasUrl, infrastructureId,
-				infrastructureJson);
+		Mockito.verify(restClient).postToInfrastructuresWebResource(infrastructureJson);
 	}
 
 	@Test
 	public void testCreateInstances() {
+
+		Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\"}"))
+				.thenReturn("[{'id' : 'instance123'}]");
+
+		Set<String> instances = connectorIaasClient.createInstances("infra123", "{id=\"123\"}");
+
+		assertThat(instances.size(), is(1));
+
+		assertThat(instances.iterator().next(), is("instance123"));
+
+	}
+
+	@Test
+	public void testCreateMultipleInstances() {
+
+		Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\"}"))
+				.thenReturn("[{'id' : 'instance123'},{'id' : 'instance456'},{'id' : 'instance789'}]");
+
+		Set<String> instances = connectorIaasClient.createInstances("infra123", "{id=\"123\"}");
+
+		assertThat(instances.size(), is(3));
+
+		Set<String> expectedId = Sets.newHashSet("instance123", "instance456", "instance789");
+
+		for (String id : instances) {
+			assertThat(expectedId.remove(id), is(true));
+		}
+
+	}
+
+	@Test
+	public void testTerminateInstance() {
+
+		connectorIaasClient.terminateInstance("infra123", "123456");
+
+		Mockito.verify(restClient).deleteToInstancesWebResource("infra123", "instanceId", "123456");
+
+	}
+
+	@Test
+	public void testRunScriptOnInstance() {
+
+		connectorIaasClient.runScriptOnInstance("infra123", "123456", "somescriptjason");
+
+		Mockito.verify(restClient).postToScriptsWebResource("infra123", "instanceId", "123456", "somescriptjason");
 
 	}
 

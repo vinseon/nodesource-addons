@@ -36,14 +36,6 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import org.apache.log4j.Logger;
-import org.objectweb.proactive.core.ProActiveException;
-import org.objectweb.proactive.core.node.Node;
-import org.ow2.proactive.resourcemanager.exception.RMException;
-import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
@@ -51,11 +43,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
+import org.objectweb.proactive.core.ProActiveException;
+import org.objectweb.proactive.core.node.Node;
+import org.ow2.proactive.resourcemanager.exception.RMException;
+import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
+
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 public class AWSEC2Infrastructure extends InfrastructureManager {
 
-	private static final String INSTANCE_ID_NODE_PROPERTY = "instanceId";
+	public static final String INSTANCE_ID_NODE_PROPERTY = "instanceId";
 
-	private static final String INFRASTRUCTURE_TYPE = "aws-ec2";
+	public static final String INFRASTRUCTURE_TYPE = "aws-ec2";
 
 	/** logger */
 	private static final Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
@@ -70,7 +71,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	protected String rmDomain = generateDefaultRMDomain();
 
 	@Configurable(description = "Connector-iaas URL")
-	protected String connectorIaasURL = "http://localhost:8081/connector-iaas";
+	protected String connectorIaasURL = "http://localhost:8088/connector-iaas";
 
 	@Configurable(description = "Image")
 	protected String image = null;
@@ -96,14 +97,11 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	@Configurable(description = "CPU")
 	protected int cpu = 1;
 
-	@Configurable(description = "Alternate Resource Manager url (if we don't want to use the default one, for example in case of multi-protocol")
-	protected String alternateRMURL = "";
-
 	protected String infrastructureId = null;
 
-	private ConnectorIaasClient connectorIaasClient = null;
+	protected ConnectorIaasClient connectorIaasClient = null;
 
-	private final Map<String, Set<String>> nodesPerInstances;
+	protected final Map<String, Set<String>> nodesPerInstances;
 
 	/**
 	 * Default constructor
@@ -130,12 +128,13 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		this.additionalProperties = parameters[9].toString().trim();
 		this.ram = Integer.parseInt(parameters[10].toString().trim());
 		this.cpu = Integer.parseInt(parameters[11].toString().trim());
-		this.alternateRMURL = parameters[12].toString().trim();
+
+		connectorIaasClient = new ConnectorIaasClient(ConnectorIaasClient.generateRestClient(connectorIaasURL));
 
 	}
 
 	private void validate(Object[] parameters) {
-		if (parameters == null || parameters.length < 13) {
+		if (parameters == null || parameters.length < 12) {
 			throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
 		}
 
@@ -171,12 +170,13 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			throw new IllegalArgumentException("The operating system must be specified");
 		} else {
 			switch (parameters[7].toString().trim()) {
-				case "linux":
-				case "windows":
-				case "mac":
-					break;
-				default:
-					throw new IllegalArgumentException("Invalid operating system name : \"" + parameters[7].toString().trim() + "\"");
+			case "linux":
+			case "windows":
+			case "mac":
+				break;
+			default:
+				throw new IllegalArgumentException(
+						"Invalid operating system name : \"" + parameters[7].toString().trim() + "\"");
 			}
 		}
 
@@ -196,26 +196,21 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			throw new IllegalArgumentException("The CPU must be specified");
 		}
 
-		if (parameters[12] == null) {
-			parameters[12] = "";
-		}
-
 	}
 
 	private void createInfrastructure() {
-		if (connectorIaasClient == null) {
-			infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
-			String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
-					INFRASTRUCTURE_TYPE, aws_key, aws_secret_key);
+		infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
-			logger.info("Creating infrastructure : " + infrastructureJson);
+		String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
+				INFRASTRUCTURE_TYPE, aws_key, aws_secret_key);
 
-			connectorIaasClient = new ConnectorIaasClient(ConnectorIaasClient.jerseyClient, connectorIaasURL,
-					infrastructureId, infrastructureJson);
+		logger.info("Creating infrastructure : " + infrastructureJson);
 
-			logger.info("Infrastructure created");
-		}
+		connectorIaasClient.createInfrastructure(infrastructureJson);
+
+		logger.info("Infrastructure created");
+
 	}
 
 	@Override
@@ -223,12 +218,12 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 		createInfrastructure();
 
-		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image, "" + numberOfInstances,
-				"" + cpu, "" + ram);
+		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image,
+				"" + numberOfInstances, "" + cpu, "" + ram);
 
 		logger.info("InstanceJson : " + instanceJson);
 
-		Set<String> instancesIds = connectorIaasClient.createInstances(instanceJson);
+		Set<String> instancesIds = connectorIaasClient.createInstances(infrastructureId, instanceJson);
 
 		logger.info("Instances ids created : " + instancesIds);
 
@@ -245,9 +240,10 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	private void executeScript(String instanceId, String instanceScriptJson) {
 		String scriptResult = null;
 		try {
-			scriptResult = connectorIaasClient.runScriptOnInstance(instanceId, instanceScriptJson);
+			scriptResult = connectorIaasClient.runScriptOnInstance(infrastructureId, instanceId, instanceScriptJson);
 			if (logger.isDebugEnabled()) {
-				logger.debug("Executed successfully script for instance id :" + instanceId + "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
+				logger.debug("Executed successfully script for instance id :" + instanceId + "\nScript contents : "
+						+ instanceScriptJson + " \nResult : " + scriptResult);
 			} else {
 				logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
 			}
@@ -278,7 +274,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 			logger.info("Removed node : " + node.getNodeInformation().getName());
 
 			if (nodesPerInstances.get(instanceId).isEmpty()) {
-				connectorIaasClient.terminateInstance(instanceId);
+				connectorIaasClient.terminateInstance(infrastructureId, instanceId);
 				nodesPerInstances.remove(instanceId);
 				logger.info("Removed instance : " + instanceId);
 			}
@@ -311,7 +307,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 		return getDescription();
 	}
 
-
 	private String generateDefaultRMDomain() {
 		try {
 			// best effort, may not work for all machines
@@ -334,16 +329,16 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	private String generateDefaultStartNodeCommand(String instanceId) {
 		try {
 			String rmUrlToUse = rmUrl;
-			if ((alternateRMURL != null) && (!alternateRMURL.isEmpty())) {
-				rmUrlToUse = alternateRMURL;
-			}
+
 			String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
 			return "java -jar node.jar -Dproactive.communication.protocol=" + protocol
-					+ " -Dproactive.pamr.router.address=" + rmDomain + " -D"+INSTANCE_ID_NODE_PROPERTY+"=" + instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName()
+					+ " -Dproactive.pamr.router.address=" + rmDomain + " -D" + INSTANCE_ID_NODE_PROPERTY + "="
+					+ instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName()
 					+ " -w " + numberOfNodesPerInstance;
 		} catch (Exception e) {
 			logger.error("Exception when generating the command, fallback on default value", e);
-			return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " + additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+			return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " + additionalProperties
+					+ " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
 		}
 	}
 
