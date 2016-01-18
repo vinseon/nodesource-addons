@@ -202,7 +202,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
 	}
 
-	private void connectToConnectorIaas() {
+	private void createInfrastructure() {
 		if (connectorIaasClient == null) {
 			infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
@@ -221,7 +221,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 	@Override
 	public void acquireNode() {
 
-		connectToConnectorIaas();
+		createInfrastructure();
 
 		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image, "" + numberOfInstances,
 				"" + cpu, "" + ram);
