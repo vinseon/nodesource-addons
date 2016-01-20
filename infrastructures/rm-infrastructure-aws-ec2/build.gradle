@@ -4,43 +4,43 @@ repositories {
 }
 
 buildscript {
-  repositories { 
-  	jcenter() 
-  	maven { url 'http://repo.spring.io/plugins-release' }
-  }
+  repositories { jcenter() }
   dependencies {
     classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
-    classpath 'com.netflix.nebula:gradle-extra-configurations-plugin:3.0.3'
   }
 }
 
 apply plugin: 'java' // or 'groovy'. Must be explicitly applied
 apply plugin: 'com.github.johnrengelman.shadow'
-apply plugin: 'nebula.provided-base'
-
 
 shadowJar {
+
 }
 
 dependencies {
     compile 'com.sun.jersey:jersey-client:1.9.1'
     compile 'org.json:json:20151123'
-    provided 'org.ow2.proactive:rm-server:7.1.2'
-    provided 'com.google.guava:guava:19.0'
-    provided 'log4j:log4j:1.2.17'
-    provided "org.objectweb.proactive:programming-core:${programmingVersion}"
+    compile 'org.ow2.proactive:rm-server:7.3.0-SNAPSHOT'
+    compile "org.objectweb.proactive:programming-core:7.3.0-SNAPSHOT"
+    compile 'com.google.guava:guava:19.0'
+    compile 'log4j:log4j:1.2.17'
+   
     testCompile 'junit:junit:4.12'
     testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
     testCompile 'org.mockito:mockito-core:1.10.19'
-    
 }
 
-configurations {
-    /* We don't want the rm-server dependency in our shadowJar */
-    runtime.exclude module: 'rm-server'
-    runtime.exclude module: 'programming-core'
-    runtime.exclude module: 'guava'
-    runtime.exclude module: 'log4j'
+if(project.hasProperty('excludeRuntimeDependencies')){
+
+	configurations {
+	    /* We don't want the rm-server dependency in our shadowJar */
+	    runtime.exclude module: 'rm-server'
+	    runtime.exclude module: 'programming-core'
+	    runtime.exclude module: 'guava'
+	    runtime.exclude module: 'log4j'
+	   
+	}
+	    
 }
 
 
