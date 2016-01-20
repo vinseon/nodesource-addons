@@ -20,8 +20,8 @@ shadowJar {
 dependencies {
     compile 'com.sun.jersey:jersey-client:1.9.1'
     compile 'org.json:json:20151123'
-    compile 'org.ow2.proactive:rm-server:7.3.0-SNAPSHOT'
-    compile "org.objectweb.proactive:programming-core:7.3.0-SNAPSHOT"
+    compile "org.ow2.proactive:rm-server:${rmVersion}"
+    compile "org.objectweb.proactive:programming-core:${programmingVersion}"
     compile 'com.google.guava:guava:19.0'
     compile 'log4j:log4j:1.2.17'
    
