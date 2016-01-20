@@ -30,17 +30,18 @@ dependencies {
     testCompile 'org.mockito:mockito-core:1.10.19'
 }
 
-if(project.hasProperty('excludeRuntimeDependencies')){
+configurations {
+    shadowJar
 
-	configurations {
-	    /* We don't want the rm-server dependency in our shadowJar */
-	    runtime.exclude module: 'rm-server'
-	    runtime.exclude module: 'programming-core'
-	    runtime.exclude module: 'guava'
-	    runtime.exclude module: 'log4j'
-	   
-	}
-	    
+    runtime.extendsFrom = [compile]
+    runtime.exclude module: 'rm-server'
+	runtime.exclude module: 'programming-core'
+	runtime.exclude module: 'guava'
+	runtime.exclude module: 'log4j'
+	
+    testRuntime.extendsFrom = [testCompile]
 }
+
+
 
 
