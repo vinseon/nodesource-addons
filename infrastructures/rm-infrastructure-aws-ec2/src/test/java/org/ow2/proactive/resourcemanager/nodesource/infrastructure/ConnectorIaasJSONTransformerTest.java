@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.List;
 
+import org.json.JSONObject;
 import org.junit.Test;
 
 import com.google.common.collect.Lists;
@@ -13,15 +14,26 @@ public class ConnectorIaasJSONTransformerTest {
 
 	@Test
 	public void testGetInfrastructureJSON() {
-		assertThat(
-				ConnectorIaasJSONTransformer.getInfrastructureJSON("infrastructureId", "type", "username", "password"),
-				is("{\"credentials\":{\"password\":\"password\",\"username\":\"username\"},\"id\":\"infrastructureId\",\"type\":\"type\"}"));
+
+		JSONObject actual = new JSONObject(
+				ConnectorIaasJSONTransformer.getInfrastructureJSON("infrastructureId", "type", "username", "password"));
+
+		assertThat(actual.getString("id"), is("infrastructureId"));
+		assertThat(actual.getString("type"), is("type"));
+		assertThat(actual.getJSONObject("credentials").getString("username"), is("username"));
+		assertThat(actual.getJSONObject("credentials").getString("password"), is("password"));
 	}
 
 	@Test
 	public void testGetInstanceJSON() {
-		assertThat(ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image", "number", "cpu", "ram"),
-				is("{\"image\":\"image\",\"number\":\"number\",\"cpu\":\"cpu\",\"tag\":\"tag\",\"ram\":\"ram\"}"));
+		JSONObject actual = new JSONObject(
+				ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image", "number", "cpu", "ram"));
+
+		assertThat(actual.getString("tag"), is("tag"));
+		assertThat(actual.getString("image"), is("image"));
+		assertThat(actual.getString("number"), is("number"));
+		assertThat(actual.getString("cpu"), is("cpu"));
+		assertThat(actual.getString("ram"), is("ram"));
 	}
 
 	@Test
