@@ -43,6 +43,7 @@ import org.objectweb.proactive.core.ProActiveException;
 import org.objectweb.proactive.core.node.Node;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
+import org.ow2.proactive.resourcemanager.nodesource.infrastructure.InfrastructureManager;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;

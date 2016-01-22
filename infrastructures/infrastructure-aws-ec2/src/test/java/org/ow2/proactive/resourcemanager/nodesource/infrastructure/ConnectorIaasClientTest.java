@@ -10,6 +10,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.ow2.proactive.resourcemanager.nodesource.infrastructure.ConnectorIaasClient;
+import org.ow2.proactive.resourcemanager.nodesource.infrastructure.RestClient;
 
 import com.google.common.collect.Sets;
 

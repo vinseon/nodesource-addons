@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.json.JSONObject;
 import org.junit.Test;
+import org.ow2.proactive.resourcemanager.nodesource.infrastructure.ConnectorIaasJSONTransformer;
 
 import com.google.common.collect.Lists;
 

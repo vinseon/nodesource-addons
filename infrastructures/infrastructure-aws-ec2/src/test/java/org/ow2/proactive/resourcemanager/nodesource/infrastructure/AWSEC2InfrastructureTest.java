@@ -21,6 +21,9 @@ import org.objectweb.proactive.core.node.NodeInformation;
 import org.objectweb.proactive.core.runtime.ProActiveRuntime;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.NodeSource;
+import org.ow2.proactive.resourcemanager.nodesource.infrastructure.AWSEC2Infrastructure;
+import org.ow2.proactive.resourcemanager.nodesource.infrastructure.ConnectorIaasClient;
+import org.ow2.proactive.resourcemanager.nodesource.infrastructure.ConnectorIaasJSONTransformer;
 import org.python.google.common.collect.Sets;
 
 public class AWSEC2InfrastructureTest {
