@@ -1,39 +1,4 @@
-repositories {
-    jcenter()
-    maven { url 'http://repository.activeeon.com/content/groups/proactive/' }
-}
-
-buildscript {
-  repositories { jcenter() }
-  dependencies {
-    classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
-  }
-}
-
-apply plugin: 'java' // or 'groovy'. Must be explicitly applied
-apply plugin: 'com.github.johnrengelman.shadow'
-
-shadowJar {
-
-}
-
 dependencies {
     compile 'com.sun.jersey:jersey-client:1.9.1'
     compile 'org.json:json:20151123'
 }
-
-configurations {
-    shadowJar
-
-    runtime.extendsFrom = [compile]
-    runtime.exclude module: 'rm-server'
-	runtime.exclude module: 'programming-core'
-	runtime.exclude module: 'guava'
-	runtime.exclude module: 'log4j'
-	
-    testRuntime.extendsFrom = [testCompile]
-}
-
-
-
-

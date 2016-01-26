@@ -43,6 +43,11 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.axiom.om.OMElement;
+import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.ActivityStateEnumeration;
+import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.EndpointReferenceType;
+import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.GetActivityStatusResponseType;
+import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.ReferenceParametersType;
 import org.objectweb.proactive.core.config.CentralPAPropertyRepository;
 import org.objectweb.proactive.core.node.Node;
 import org.objectweb.proactive.core.util.ProActiveCounter;
@@ -53,17 +58,13 @@ import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
 import org.ow2.proactive.resourcemanager.utils.CommandLineBuilder;
 import org.ow2.proactive.resourcemanager.utils.OperatingSystem;
 import org.ow2.proactive.utils.FileToBytesConverter;
-import org.apache.axiom.om.OMElement;
-import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.ActivityStateEnumeration;
-import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.EndpointReferenceType;
-import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.GetActivityStatusResponseType;
-import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.ReferenceParametersType;
 
 
 public class WinHPCInfrastructure extends DefaultInfrastructureManager {
 
     /**
-     * maximum number of nodes this infrastructure can ask simultaneously to the WinHPC scheduler
+     * maximum number of nodes this infrastructure can ask simultaneously to the
+     * WinHPC scheduler
      */
     @Configurable(description = "Maximum number of nodes to deploy")
     protected int maxNodes = 1;
@@ -107,7 +108,8 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     protected File RMCredentialsPath;
 
     /**
-     * Additional java options to append to the command executed on the remote host
+     * Additional java options to append to the command executed on the remote
+     * host
      */
     @Configurable(description = "Options for the java command\nlaunching the node on the remote hosts")
     protected String javaOptions;
@@ -116,7 +118,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     protected String extraClassPath;
 
     @Configurable(description = "in ms. After this timeout expired\nthe node is considered to be lost")
-    protected Integer timeout = 60 * 1000;//1 mn
+    protected Integer timeout = 60 * 1000;// 1 mn
 
     /** Credentials used by remote nodes to register to the NS */
     private Credentials credentials = null;
@@ -143,7 +145,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         while (this.atomicMaxNodes.getAndDecrement() >= 1) {
             acquireNodeImpl();
         }
-        //we decremented one too many
+        // we decremented one too many
         this.atomicMaxNodes.getAndIncrement();
         logger.debug("Maximum number of node acquisition reached");
     }
@@ -153,7 +155,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         if (this.atomicMaxNodes.getAndDecrement() >= 1) {
             acquireNodeImpl();
         } else {
-            //one decremented once too many
+            // one decremented once too many
             this.atomicMaxNodes.getAndIncrement();
             logger.debug("Maximum number of node acquisition reached");
         }
@@ -174,8 +176,9 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
                 try {
                     startNode();
                 } catch (Exception e) {
-                    //could handle the exception here to increment the number of available nodes
-                    //or get it done in the handleFailedDeployment* methods...
+                    // could handle the exception here to increment the number
+                    // of available nodes
+                    // or get it done in the handleFailedDeployment* methods...
                     logger.error("Could not acquire node ", e);
                     return;
                 }
@@ -188,11 +191,11 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      */
     private void startNode() throws RMException {
         EndpointReferenceType[] eprs = new EndpointReferenceType[1];
-        //Creates the command line builder
+        // Creates the command line builder
         CommandLineBuilder clb = this.getCommandLineBuilder();
         String nodeName = clb.getNodeName();
-        //Generate the HPCBP acitivty from Axis2 generated JSDL objects
-        //escaping the built command if contains quotes
+        // Generate the HPCBP acitivty from Axis2 generated JSDL objects
+        // escaping the built command if contains quotes
         String fullCommand = null;
         String obfuscatedFullCommand = null;
         try {
@@ -204,15 +207,15 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
 
         String dNode = super.addDeployingNode(nodeName, obfuscatedFullCommand,
                 "Node deployment on Windows HPC", timeout);
-        //we add the timeout flag
+        // we add the timeout flag
         this.dnTimeout.put(dNode, false);
         this.submittedJobs.put(nodeName, eprs);
         this.deployingNodeToEndpoint.put(dNode, eprs);
 
         logger.debug("Executing: " + fullCommand);
         try {
-            eprs[0] = this.getDeployer().createActivity(
-                    org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer
+            eprs[0] = this.getDeployer()
+                    .createActivity(org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer
                             .createJSDLDocument(fullCommand));
         } catch (Exception e) {
             this.handleFailedDeployment(dNode, clb, e);
@@ -253,7 +256,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
                 // job failed
                 this.handleFailedDeployment(dNode, clb, "The job's status is failed.");
             }
-            //if the status changed, we update it
+            // if the status changed, we update it
             if (currentStatus != null && !currentStatus.equals(statusString)) {
                 statusString = currentStatus;
                 super.updateDeployingNodeDescription(dNode, "Node deployment on Windows HPC" +
@@ -261,23 +264,23 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
             }
 
             if (super.checkNodeIsAcquiredAndDo(nodeName, null, null)) {
-                //node has been acquired, can exit
+                // node has been acquired, can exit
                 return;
             } else {
-                //waiting
+                // waiting
             }
         } while (((hasTimeouted = this.dnTimeout.get(dNode)) != null) && !hasTimeouted && threshold > 0);
 
-        //we exited the loop because of the threshold
+        // we exited the loop because of the threshold
         if (threshold <= 0) {
             this.handleFailedDeployment(dNode, clb, thresholdCause);
         }
 
-        //if we exit because of a timeout
+        // if we exit because of a timeout
         if (hasTimeouted != null && hasTimeouted) {
-            //we remove it
+            // we remove it
             this.dnTimeout.remove(dNode);
-            //has been terminated during the deploying node removal
+            // has been terminated during the deploying node removal
             this.submittedJobs.remove(clb.getNodeName());
             throw new RMException("Deploying Node " + nodeName + " not expected any more");
         }
@@ -288,10 +291,10 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      */
     @Override
     protected void notifyDeployingNodeLost(String pnURL) {
-        //we notify the control loop to exit
+        // we notify the control loop to exit
         logger.debug("Terminating the job for node " + pnURL);
         this.dnTimeout.put(pnURL, true);
-        //we remove the job
+        // we remove the job
         EndpointReferenceType[] epr = this.deployingNodeToEndpoint.remove(pnURL);
         if (epr != null) {
             try {
@@ -303,8 +306,9 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     }
 
     /**
-     * Changes the status of the deploying node passed as parameter
-     * and cleanup of internal maintained structures.
+     * Changes the status of the deploying node passed as parameter and cleanup
+     * of internal maintained structures.
+     * 
      * @param dNode
      * @param clb
      * @param cause
@@ -320,15 +324,20 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     }
 
     /**
-     * Changes the status of the deploying node to lost an updates its description
-     * @param dNode The deploying node's url to update
-     * @param e the exception that caused the deployment to fail
+     * Changes the status of the deploying node to lost an updates its
+     * description
+     * 
+     * @param dNode
+     *            The deploying node's url to update
+     * @param e
+     *            the exception that caused the deployment to fail
      * @throws RMException
      */
-    private void handleFailedDeployment(String dNode, CommandLineBuilder clb, Throwable e) throws RMException {
+    private void handleFailedDeployment(String dNode, CommandLineBuilder clb, Throwable e)
+            throws RMException {
         String error = Utils.getStacktrace(e);
-        super.declareDeployingNodeLost(dNode, "The deployment failed because of an error: " +
-            System.lineSeparator() + error);
+        super.declareDeployingNodeLost(dNode,
+                "The deployment failed because of an error: " + System.lineSeparator() + error);
         String nodeName = clb.getNodeName();
         this.submittedJobs.remove(nodeName);
         this.dnTimeout.remove(dNode);
@@ -336,10 +345,12 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     }
 
     /**
-     * Creates a lost node to notify the user that the deployment
-     * faile because of an error
+     * Creates a lost node to notify the user that the deployment faile because
+     * of an error
+     * 
      * @param clb
-     * @param e the error that caused the deployment to failed.
+     * @param e
+     *            the error that caused the deployment to failed.
      * @throws RMException
      */
     private void handleFailedDeployment(CommandLineBuilder clb, Throwable e) throws RMException {
@@ -351,8 +362,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
             command = "Cannot determine the command used to start the node.";
         }
         String lostNode = super.addDeployingNode(clb.getNodeName(), command,
-                "Cannot deploy the node because of an error:" + System.lineSeparator() + error,
-                60000);
+                "Cannot deploy the node because of an error:" + System.lineSeparator() + error, 60000);
         super.declareDeployingNodeLost(lostNode, null);
         String nodeName = clb.getNodeName();
         this.submittedJobs.remove(nodeName);
@@ -360,18 +370,11 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     }
 
     /**
-     * parameters[0] = maxNodes
-     * parameters[1] = serviceUrl
-     * parameters[2] = username
-     * parameters[3] = password
-     * parameters[4] = keystore
-     * parameters[5] = keystore's password
-     * parameters[6] = java path
-     * parameters[7] = rmPath
-     * parameters[8] = credentials
-     * parameters[9] = java options
-     * parameters[10] = extra classpath
-     * parameters[11] = timeout
+     * parameters[0] = maxNodes parameters[1] = serviceUrl parameters[2] =
+     * username parameters[3] = password parameters[4] = keystore parameters[5]
+     * = keystore's password parameters[6] = java path parameters[7] = rmPath
+     * parameters[8] = credentials parameters[9] = java options parameters[10] =
+     * extra classpath parameters[11] = timeout
      */
     @Override
     public void configure(Object... parameters) {
@@ -443,7 +446,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         logger.debug("Removing node " + nodeName);
         if (submittedJobs.remove(nodeName) != null) {
             this.atomicMaxNodes.incrementAndGet();
-            //the job is automatically finished
+            // the job is automatically finished
         } else {
             logger.warn("Unknown node " + node.getNodeInformation().getName());
         }
@@ -459,13 +462,14 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         });
     }
 
+    @Override
     public String getDescription() {
         return "Windows HPC infrasturcure";
     }
 
     /**
-     * Builds the command line builder to be used for the remote node
-     * startup
+     * Builds the command line builder to be used for the remote node startup
+     * 
      * @return The appropriate command line builder
      */
     @SuppressWarnings("deprecation")
@@ -474,7 +478,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         result.setTargetOS(OperatingSystem.WINDOWS);
         result.setRmHome(this.rmPath);
         result.setJavaPath(this.javaPath);
-        //not only user provided...
+        // not only user provided...
         StringBuilder sb = new StringBuilder();
         sb.append(CentralPAPropertyRepository.JAVA_SECURITY_POLICY.getCmdLine());
         sb.append(this.rmPath);
@@ -500,9 +504,10 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         if (this.deployer == null) {
             try {
                 this.deployer = new org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer(
-                    new File(PAResourceManagerProperties.RM_HOME.getValueAsString(), "config" +
-                        File.separator + "rm" + File.separator + "deployment" + File.separator + "winhpc" +
-                        File.separator).getAbsolutePath(), serviceUrl, userName, password);
+                    new File(PAResourceManagerProperties.RM_HOME.getValueAsString(),
+                        "config" + File.separator + "rm" + File.separator + "deployment" + File.separator +
+                            "winhpc" + File.separator).getAbsolutePath(),
+                    serviceUrl, userName, password);
             } catch (Exception e) {
                 throw new RMException("Cannot instantiate the win hpc deployer", e);
             }

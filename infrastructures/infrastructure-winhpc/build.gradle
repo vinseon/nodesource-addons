@@ -1,51 +1,5 @@
-repositories {
-    jcenter()
-    maven { url 'http://repository.activeeon.com/content/groups/proactive/' }
-}
-
-buildscript {
-  repositories { jcenter() }
-  dependencies {
-    classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
-  }
-}
-
-apply plugin: 'java' // or 'groovy'. Must be explicitly applied
-apply plugin: 'com.github.johnrengelman.shadow'
-
-shadowJar {
-
-}
-
-dependencies {
-    compile 'com.sun.jersey:jersey-client:1.9.1'
-    compile 'org.json:json:20151123'
-    compile "org.ow2.proactive:rm-server:${rmVersion}"
-    compile "org.objectweb.proactive:programming-core:${programmingVersion}"
-    compile 'com.google.guava:guava:19.0'
-    compile 'log4j:log4j:1.2.17'
-    
+dependencies {   
     compile 'org.apache.axis2:axis2:1.4'
     compile 'org.apache.ws.commons.axiom:axiom-api:1.2.7'
     compile 'winhpc:WinHPCWebserviceStubs:1.0-proactive'
-   
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
-    testCompile 'org.mockito:mockito-core:1.10.19'
 }
-
-configurations {
-    shadowJar
-
-    runtime.extendsFrom = [compile]
-    runtime.exclude module: 'rm-server'
-	runtime.exclude module: 'programming-core'
-	runtime.exclude module: 'guava'
-	runtime.exclude module: 'log4j'
-	
-    testRuntime.extendsFrom = [testCompile]
-}
-
-
-
-

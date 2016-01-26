@@ -1,2 +1,2 @@
-include 'infrastructures:infrastructure-aws-ec2'
 include 'infrastructures:infrastructure-winhpc'
+include 'infrastructures:infrastructure-aws-ec2'
