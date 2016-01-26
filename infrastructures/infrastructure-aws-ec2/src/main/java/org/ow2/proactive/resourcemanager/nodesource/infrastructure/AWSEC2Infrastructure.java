@@ -92,7 +92,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     @Configurable(description = "Additional java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
     protected String additionalProperties = "";
 
-    @Configurable(description = "RAM (in Mega Bytes))")
+    @Configurable(description = "RAM (in Mega Bytes)")
     protected int ram = 512;
 
     @Configurable(description = "CPU")
