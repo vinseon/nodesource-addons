@@ -50,14 +50,14 @@ public class AWSEC2InfrastructureTest {
     public void testInitialParamateres() {
         assertThat(awsec2Infrastructure.aws_key, is(nullValue()));
         assertThat(awsec2Infrastructure.aws_secret_key, is(nullValue()));
-        assertThat(awsec2Infrastructure.rmDomain, is(not(nullValue())));
-        assertThat(awsec2Infrastructure.connectorIaasURL, is("http://localhost:8080/connector-iaas"));
+        assertThat(awsec2Infrastructure.rmHostname, is(not(nullValue())));
+        assertThat(awsec2Infrastructure.connectorIaasURL,
+                is("http://" + awsec2Infrastructure.rmHostname + "/connector-iaas"));
         assertThat(awsec2Infrastructure.image, is(nullValue()));
         assertThat(awsec2Infrastructure.numberOfInstances, is(1));
         assertThat(awsec2Infrastructure.numberOfNodesPerInstance, is(1));
-        assertThat(awsec2Infrastructure.operatingSystem, is("linux"));
         assertThat(awsec2Infrastructure.downloadCommand,
-                is("wget -nv " + awsec2Infrastructure.rmDomain + "/rest/node.jar"));
+                is("wget -nv " + awsec2Infrastructure.rmHostname + "/rest/node.jar"));
         assertThat(awsec2Infrastructure.additionalProperties, is(""));
         assertThat(awsec2Infrastructure.ram, is(512));
         assertThat(awsec2Infrastructure.cpu, is(1));
@@ -67,7 +67,7 @@ public class AWSEC2InfrastructureTest {
     public void testConfigure() {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "2", "3", "mac",
+                "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
     }
 
@@ -75,15 +75,7 @@ public class AWSEC2InfrastructureTest {
     public void tesConfigureNotEnoughParameters() {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "mac",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testConfigureWrongOperatingSystem() {
-
-        awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "2", "3", "solaris",
+                "http://localhost:8088/connector-iaas", "aws-image",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
     }
 
@@ -91,7 +83,7 @@ public class AWSEC2InfrastructureTest {
     public void testAcquireNode() {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "2", "3", "mac",
+                "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
         awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
@@ -130,7 +122,7 @@ public class AWSEC2InfrastructureTest {
     @Test
     public void testRemoveNode() throws ProActiveException, RMException {
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "2", "3", "mac",
+                "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
         awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
@@ -161,7 +153,7 @@ public class AWSEC2InfrastructureTest {
     @Test
     public void testNotifyAcquiredNode() throws ProActiveException, RMException {
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "2", "3", "mac",
+                "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
         awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
@@ -189,7 +181,7 @@ public class AWSEC2InfrastructureTest {
     @Test
     public void testshutdown() {
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "2", "3", "mac",
+                "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
         awsec2Infrastructure.connectorIaasClient = connectorIaasClient;

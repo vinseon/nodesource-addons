@@ -68,11 +68,11 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     @Configurable(description = "The AWS_SKEY")
     protected String aws_secret_key = null;
 
-    @Configurable(description = "Resource manager domain")
-    protected String rmDomain = generateDefaultRMDomain();
+    @Configurable(description = "Resource manager hostname or ip address")
+    protected String rmHostname = generateDefaultRMHostname();
 
     @Configurable(description = "Connector-iaas URL")
-    protected String connectorIaasURL = "http://localhost:8080/connector-iaas";
+    protected String connectorIaasURL = "http://" + generateDefaultRMHostname() + "/connector-iaas";
 
     @Configurable(description = "Image")
     protected String image = null;
@@ -83,13 +83,10 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     @Configurable(description = "Total nodes to create per instance")
     protected int numberOfNodesPerInstance = 1;
 
-    @Configurable(description = "Target Operating System (windows/linux/mac)")
-    protected String operatingSystem = "linux";
-
     @Configurable(description = "Command used to download the worker jar")
     protected String downloadCommand = generateDefaultDownloadCommand();
 
-    @Configurable(description = "Additional java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
+    @Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
     protected String additionalProperties = "";
 
     @Configurable(description = "RAM (in Mega Bytes)")
@@ -119,16 +116,15 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
         this.aws_key = parameters[0].toString().trim();
         this.aws_secret_key = parameters[1].toString().trim();
-        this.rmDomain = parameters[2].toString().trim();
+        this.rmHostname = parameters[2].toString().trim();
         this.connectorIaasURL = parameters[3].toString().trim();
         this.image = parameters[4].toString().trim();
         this.numberOfInstances = Integer.parseInt(parameters[5].toString().trim());
         this.numberOfNodesPerInstance = Integer.parseInt(parameters[6].toString().trim());
-        this.operatingSystem = parameters[7].toString().trim();
-        this.downloadCommand = parameters[8].toString().trim();
-        this.additionalProperties = parameters[9].toString().trim();
-        this.ram = Integer.parseInt(parameters[10].toString().trim());
-        this.cpu = Integer.parseInt(parameters[11].toString().trim());
+        this.downloadCommand = parameters[7].toString().trim();
+        this.additionalProperties = parameters[8].toString().trim();
+        this.ram = Integer.parseInt(parameters[9].toString().trim());
+        this.cpu = Integer.parseInt(parameters[10].toString().trim());
 
         connectorIaasClient = new ConnectorIaasClient(
             ConnectorIaasClient.generateRestClient(connectorIaasURL));
@@ -136,7 +132,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     }
 
     private void validate(Object[] parameters) {
-        if (parameters == null || parameters.length < 12) {
+        if (parameters == null || parameters.length < 11) {
             throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
         }
 
@@ -149,7 +145,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         }
 
         if (parameters[2] == null) {
-            throw new IllegalArgumentException("The Resource manager domain must be specified");
+            throw new IllegalArgumentException("The Resource manager hostname must be specified");
         }
 
         if (parameters[3] == null) {
@@ -170,32 +166,18 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         }
 
         if (parameters[7] == null) {
-            throw new IllegalArgumentException("The operating system must be specified");
-        } else {
-            switch (parameters[7].toString().trim()) {
-                case "linux":
-                case "windows":
-                case "mac":
-                    break;
-                default:
-                    throw new IllegalArgumentException(
-                        "Invalid operating system name : \"" + parameters[7].toString().trim() + "\"");
-            }
-        }
-
-        if (parameters[8] == null) {
             throw new IllegalArgumentException("The download node.jar command must be specified");
         }
 
-        if (parameters[9] == null) {
-            parameters[9] = "";
+        if (parameters[8] == null) {
+            parameters[8] = "";
         }
 
-        if (parameters[10] == null) {
+        if (parameters[9] == null) {
             throw new IllegalArgumentException("The amount of RAM must be specified");
         }
 
-        if (parameters[11] == null) {
+        if (parameters[10] == null) {
             throw new IllegalArgumentException("The CPU must be specified");
         }
 
@@ -313,6 +295,10 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
     }
 
+    public static void main(String[] args) {
+        System.out.println(System.getProperty("os.name"));
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -321,7 +307,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         return getDescription();
     }
 
-    private String generateDefaultRMDomain() {
+    private String generateDefaultRMHostname() {
         try {
             // best effort, may not work for all machines
             return InetAddress.getLocalHost().getCanonicalHostName();
@@ -332,11 +318,11 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     }
 
     private String generateDefaultDownloadCommand() {
-        if ("windows".equals(operatingSystem)) {
-            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmDomain +
+        if (System.getProperty("os.name").contains("Windows")) {
+            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmHostname +
                 "/rest/node.jar" + "', 'node.jar') }\"";
         } else {
-            return "wget -nv " + this.rmDomain + "/rest/node.jar";
+            return "wget -nv " + this.rmHostname + "/rest/node.jar";
         }
     }
 
@@ -346,7 +332,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
             String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
             return "java -jar node.jar -Dproactive.communication.protocol=" + protocol +
-                " -Dproactive.pamr.router.address=" + rmDomain + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
+                " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
                 instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " +
                 nodeSource.getName() + " -w " + numberOfNodesPerInstance;
         } catch (Exception e) {
