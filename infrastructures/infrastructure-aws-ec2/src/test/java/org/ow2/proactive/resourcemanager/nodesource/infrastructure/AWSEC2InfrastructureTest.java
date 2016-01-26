@@ -56,8 +56,15 @@ public class AWSEC2InfrastructureTest {
         assertThat(awsec2Infrastructure.image, is(nullValue()));
         assertThat(awsec2Infrastructure.numberOfInstances, is(1));
         assertThat(awsec2Infrastructure.numberOfNodesPerInstance, is(1));
-        assertThat(awsec2Infrastructure.downloadCommand,
-                is("wget -nv " + awsec2Infrastructure.rmHostname + "/rest/node.jar"));
+        if (System.getProperty("os.name").contains("Windows")) {
+            assertThat(awsec2Infrastructure.downloadCommand,
+                    is("powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" +
+                        awsec2Infrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
+        } else {
+            assertThat(awsec2Infrastructure.downloadCommand,
+                    is("wget -nv " + awsec2Infrastructure.rmHostname + "/rest/node.jar"));
+
+        }
         assertThat(awsec2Infrastructure.additionalProperties, is(""));
         assertThat(awsec2Infrastructure.ram, is(512));
         assertThat(awsec2Infrastructure.cpu, is(1));
