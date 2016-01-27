@@ -14,6 +14,9 @@ public class ConnectorIaasClient {
 
     private static final Logger logger = Logger.getLogger(ConnectorIaasClient.class);
 
+    private static final int MAX_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS = 50;
+    private static final int SLEEP_TIME_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS = 5000;
+
     private final RestClient restClient;
 
     public static RestClient generateRestClient(String connectorIaasURL) {
@@ -26,17 +29,16 @@ public class ConnectorIaasClient {
 
     public void waitForConnectorIaasToBeUP() {
         int count = 0;
-        int maxTries = 50;
         while (true) {
             try {
                 restClient.getInfrastructures();
                 return;
             } catch (Exception e) {
-                if (++count == maxTries) {
+                if (++count == MAX_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS) {
                     logger.error(e);
                     throw e;
                 } else {
-                    sleepFor(5000);
+                    sleepFor(SLEEP_TIME_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS);
                 }
             }
         }
