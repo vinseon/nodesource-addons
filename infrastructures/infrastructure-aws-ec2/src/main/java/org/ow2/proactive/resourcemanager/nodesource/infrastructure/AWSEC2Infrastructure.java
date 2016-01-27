@@ -59,7 +59,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
     public static final String INFRASTRUCTURE_TYPE = "aws-ec2";
 
-    /** logger */
     private static final Logger logger = Logger.getLogger(AWSEC2Infrastructure.class);
 
     @Configurable(description = "The AWS_AKEY")
@@ -200,6 +199,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
     @Override
     public void acquireNode() {
+
+        connectorIaasClient.waitForConnectorIaasToBeUP();
 
         createInfrastructure();
 

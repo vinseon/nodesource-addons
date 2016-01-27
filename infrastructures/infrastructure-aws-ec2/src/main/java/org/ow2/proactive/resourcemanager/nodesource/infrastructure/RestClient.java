@@ -17,6 +17,12 @@ public class RestClient {
 
     }
 
+    public String getInfrastructures() {
+        WebResource infrastructuresWebResource = jerseyClient.resource(connectorIaasURL + "/infrastructures");
+        return checkResponseIsOK(
+                infrastructuresWebResource.type("application/json").get(ClientResponse.class));
+    }
+
     public String postToInfrastructuresWebResource(String infrastructureJson) {
         WebResource infrastructuresWebResource = jerseyClient.resource(connectorIaasURL + "/infrastructures");
         return checkResponseIsOK(infrastructuresWebResource.type("application/json")

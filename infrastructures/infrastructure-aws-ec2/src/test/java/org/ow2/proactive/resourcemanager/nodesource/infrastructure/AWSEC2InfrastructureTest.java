@@ -52,7 +52,7 @@ public class AWSEC2InfrastructureTest {
         assertThat(awsec2Infrastructure.aws_secret_key, is(nullValue()));
         assertThat(awsec2Infrastructure.rmHostname, is(not(nullValue())));
         assertThat(awsec2Infrastructure.connectorIaasURL,
-                is("http://" + awsec2Infrastructure.rmHostname + "/connector-iaas"));
+                is("http://" + awsec2Infrastructure.rmHostname + ":8080/connector-iaas"));
         assertThat(awsec2Infrastructure.image, is(nullValue()));
         assertThat(awsec2Infrastructure.numberOfInstances, is(1));
         assertThat(awsec2Infrastructure.numberOfNodesPerInstance, is(1));
@@ -105,6 +105,8 @@ public class AWSEC2InfrastructureTest {
 
         String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON("node_source_name",
                 AWSEC2Infrastructure.INFRASTRUCTURE_TYPE, "aws_key", "aws_secret_key");
+
+        verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
 
         verify(connectorIaasClient).createInfrastructure(infrastructureJson);
 
