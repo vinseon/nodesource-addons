@@ -89,11 +89,11 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     @Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
     protected String additionalProperties = "";
 
-    @Configurable(description = "RAM (in Mega Bytes)")
+    @Configurable(description = "minumum RAM required (in Mega Bytes)")
     protected int ram = 512;
 
-    @Configurable(description = "CPU")
-    protected int cpu = 1;
+    @Configurable(description = "minimum number of CPU cores required")
+    protected int cores = 1;
 
     protected String infrastructureId = null;
 
@@ -124,7 +124,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         this.downloadCommand = parameters[7].toString().trim();
         this.additionalProperties = parameters[8].toString().trim();
         this.ram = Integer.parseInt(parameters[9].toString().trim());
-        this.cpu = Integer.parseInt(parameters[10].toString().trim());
+        this.cores = Integer.parseInt(parameters[10].toString().trim());
 
         connectorIaasClient = new ConnectorIaasClient(
             ConnectorIaasClient.generateRestClient(connectorIaasURL));
@@ -174,11 +174,11 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         }
 
         if (parameters[9] == null) {
-            throw new IllegalArgumentException("The amount of RAM must be specified");
+            throw new IllegalArgumentException("The amount of minimum RAM required must be specified");
         }
 
         if (parameters[10] == null) {
-            throw new IllegalArgumentException("The CPU must be specified");
+            throw new IllegalArgumentException("The minimum number of cores required must be specified");
         }
 
     }
@@ -204,7 +204,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         createInfrastructure();
 
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image,
-                "" + numberOfInstances, "" + cpu, "" + ram);
+                "" + numberOfInstances, "" + cores, "" + ram);
 
         logger.info("InstanceJson : " + instanceJson);
 

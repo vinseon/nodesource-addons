@@ -67,7 +67,7 @@ public class AWSEC2InfrastructureTest {
         }
         assertThat(awsec2Infrastructure.additionalProperties, is(""));
         assertThat(awsec2Infrastructure.ram, is(512));
-        assertThat(awsec2Infrastructure.cpu, is(1));
+        assertThat(awsec2Infrastructure.cores, is(1));
     }
 
     @Test
