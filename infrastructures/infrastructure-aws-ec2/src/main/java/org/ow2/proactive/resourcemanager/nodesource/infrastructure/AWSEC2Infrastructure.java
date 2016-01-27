@@ -191,7 +191,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
         logger.info("Creating infrastructure : " + infrastructureJson);
 
-        connectorIaasClient.createInfrastructure(infrastructureJson);
+        connectorIaasClient.createInfrastructure(infrastructureId, infrastructureJson);
 
         logger.info("Infrastructure created");
 

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
@@ -37,9 +38,12 @@ public class ConnectorIaasClientTest {
 
         Mockito.when(restClient.postToInfrastructuresWebResource(infrastructureJson))
                 .thenReturn("{'infrastructureId' : 'infra123'}");
-        connectorIaasClient.createInfrastructure(infrastructureJson);
+        connectorIaasClient.createInfrastructure("infra123", infrastructureJson);
 
-        Mockito.verify(restClient).postToInfrastructuresWebResource(infrastructureJson);
+        InOrder inOrderRestClient = Mockito.inOrder(restClient);
+
+        inOrderRestClient.verify(restClient).deleteInfrastructuresWebResource("infra123");
+        inOrderRestClient.verify(restClient).postToInfrastructuresWebResource(infrastructureJson);
     }
 
     @Test

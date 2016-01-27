@@ -108,7 +108,7 @@ public class AWSEC2InfrastructureTest {
 
         verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
 
-        verify(connectorIaasClient).createInfrastructure(infrastructureJson);
+        verify(connectorIaasClient).createInfrastructure("node_source_name", infrastructureJson);
 
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON("node_source_name", "aws-image",
                 "2", "1", "512");

@@ -45,7 +45,8 @@ public class ConnectorIaasClient {
 
     }
 
-    public String createInfrastructure(String infrastructureJson) {
+    public String createInfrastructure(String infrastructureId, String infrastructureJson) {
+        terminateInfrastructure(infrastructureId);
         return restClient.postToInfrastructuresWebResource(infrastructureJson);
     }
 
