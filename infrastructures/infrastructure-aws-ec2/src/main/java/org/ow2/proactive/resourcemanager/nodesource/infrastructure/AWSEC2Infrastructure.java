@@ -72,7 +72,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     protected String rmHostname = generateDefaultRMHostname();
 
     @Configurable(description = "Connector-iaas URL")
-    protected String connectorIaasURL = "http://" + generateDefaultRMHostname() + "/connector-iaas";
+    protected String connectorIaasURL = "http://" + generateDefaultRMHostname() + ":8080/connector-iaas";
 
     @Configurable(description = "Image")
     protected String image = null;
