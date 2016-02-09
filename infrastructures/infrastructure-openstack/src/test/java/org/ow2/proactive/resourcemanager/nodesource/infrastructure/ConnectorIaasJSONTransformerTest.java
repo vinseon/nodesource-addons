@@ -15,8 +15,8 @@ public class ConnectorIaasJSONTransformerTest {
 	@Test
 	public void testGetInfrastructureJSON() {
 
-		JSONObject actual = new JSONObject(
-				ConnectorIaasJSONTransformer.getInfrastructureJSON("infrastructureId", "type", "username", "password"));
+		JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInfrastructureJSON("infrastructureId",
+				"type", "username", "password", "endpoint"));
 
 		assertThat(actual.getString("id"), is("infrastructureId"));
 		assertThat(actual.getString("type"), is("type"));
@@ -32,8 +32,8 @@ public class ConnectorIaasJSONTransformerTest {
 		assertThat(actual.getString("tag"), is("tag"));
 		assertThat(actual.getString("image"), is("image"));
 		assertThat(actual.getString("number"), is("number"));
-		assertThat(actual.getJSONObject("hardware").getString("minCores"), is("minCores"));
-		assertThat(actual.getJSONObject("hardware").getString("minRam"), is("minRam"));
+		assertThat(actual.getString("minCores"), is("minCores"));
+		assertThat(actual.getString("minRam"), is("minRam"));
 	}
 
 	@Test
