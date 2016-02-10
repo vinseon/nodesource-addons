@@ -8,8 +8,6 @@ import java.util.List;
 import org.json.JSONObject;
 import org.junit.Test;
 
-import com.google.common.collect.Lists;
-
 public class ConnectorIaasJSONTransformerTest {
 
 	@Test
@@ -26,21 +24,17 @@ public class ConnectorIaasJSONTransformerTest {
 
 	@Test
 	public void testGetInstanceJSON() {
-		JSONObject actual = new JSONObject(
-				ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image", "number", "minCores", "minRam"));
+
+		List<String> scripts = null;
+		JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image", "number",
+				"publicKeyName", "type", scripts));
 
 		assertThat(actual.getString("tag"), is("tag"));
 		assertThat(actual.getString("image"), is("image"));
 		assertThat(actual.getString("number"), is("number"));
-		assertThat(actual.getString("minCores"), is("minCores"));
-		assertThat(actual.getString("minRam"), is("minRam"));
-	}
-
-	@Test
-	public void testGetScriptInstanceJSON() {
-		List<String> scripts = Lists.newArrayList("ls", "wget url");
-		assertThat(ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts),
-				is("{\"scripts\":[\"ls\",\"wget url\"]}"));
+		assertThat(actual.getJSONObject("credentials").getString("publicKeyName"), is("publicKeyName"));
+		assertThat(actual.getJSONObject("hardware").getString("type"), is("type"));
+		assertThat(actual.getJSONObject("script").getJSONArray("scripts").length(), is(0));
 	}
 
 }

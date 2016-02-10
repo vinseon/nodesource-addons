@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Set;
 
 import org.junit.Before;
@@ -21,6 +22,7 @@ import org.objectweb.proactive.core.node.NodeInformation;
 import org.objectweb.proactive.core.runtime.ProActiveRuntime;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.NodeSource;
+import org.python.google.common.collect.Lists;
 import org.python.google.common.collect.Sets;
 
 public class OpenstackInfrastructureTest {
@@ -50,7 +52,7 @@ public class OpenstackInfrastructureTest {
 		assertThat(openstackInfrastructure.username, is(nullValue()));
 		assertThat(openstackInfrastructure.password, is(nullValue()));
 		assertThat(openstackInfrastructure.endpoint, is(nullValue()));
-		assertThat(openstackInfrastructure.flavor, is(nullValue()));
+		assertThat(openstackInfrastructure.flavor, is(3));
 		assertThat(openstackInfrastructure.publicKeyName, is(nullValue()));
 		assertThat(openstackInfrastructure.rmHostname, is(not(nullValue())));
 		assertThat(openstackInfrastructure.connectorIaasURL,
@@ -73,26 +75,25 @@ public class OpenstackInfrastructureTest {
 
 	@Test
 	public void testConfigure() {
-
-		openstackInfrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-				"http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+		openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+				"http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
+				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void tesConfigureNotEnoughParameters() {
 
-		openstackInfrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-				"http://localhost:8088/connector-iaas", "aws-image", "wget -nv test.activeeon.com/rest/node.jar",
-				"-Dnew=value", 512, 1);
+		openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+				"http://localhost:8088/connector-iaas", "publicKeyName", "2", "3",
+				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 	}
 
 	@Test
 	public void testAcquireNode() {
 
-		openstackInfrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-				"http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+		openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+				"http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
+				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
 		openstackInfrastructure.connectorIaasClient = connectorIaasClient;
 		when(nodeSource.getName()).thenReturn("node source name");
@@ -105,22 +106,21 @@ public class OpenstackInfrastructureTest {
 		openstackInfrastructure.acquireNode();
 
 		String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON("node_source_name",
-				OpenstackInfrastructure.INFRASTRUCTURE_TYPE, "aws_key", "aws_secret_key");
+				OpenstackInfrastructure.INFRASTRUCTURE_TYPE, "username", "password", "endpoint");
 
 		verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
 
 		verify(connectorIaasClient).createInfrastructure("node_source_name", infrastructureJson);
 
-		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON("node_source_name", "aws-image", "2", "1",
-				"512");
+		List<String> scripts = Lists.newArrayList();
+		scripts.add("wget -nv test.activeeon.com/rest/node.jar");
+		scripts.add(
+				"nohup java -jar node.jar -Dproactive.communication.protocol=http -Dproactive.pamr.router.address=test.activeeon.com -DinstanceTag=node_source_name_1 -Dnew=value -r http://test.activeeon.com -s node source name -w 3  &");
+
+		String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON("node_source_name_1", "openstack-image", "1",
+				"publicKeyName", "3", scripts);
 
 		verify(connectorIaasClient).createInstances("node_source_name", instanceJson);
-
-		String scripts123 = "{\"scripts\":[\"wget -nv test.activeeon.com/rest/node.jar\",\"nohup java -jar node.jar -Dproactive.communication.protocol=http -Dproactive.pamr.router.address=test.activeeon.com -DinstanceId=123 -Dnew=value -r http://test.activeeon.com -s node source name -w 3  &\"]}";
-		String scripts456 = "{\"scripts\":[\"wget -nv test.activeeon.com/rest/node.jar\",\"nohup java -jar node.jar -Dproactive.communication.protocol=http -Dproactive.pamr.router.address=test.activeeon.com -DinstanceId=456 -Dnew=value -r http://test.activeeon.com -s node source name -w 3  &\"]}";
-
-		verify(connectorIaasClient, times(1)).runScriptOnInstance("node_source_name", "123", scripts123);
-		verify(connectorIaasClient, times(1)).runScriptOnInstance("node_source_name", "456", scripts456);
 
 	}
 
@@ -190,9 +190,9 @@ public class OpenstackInfrastructureTest {
 
 	@Test
 	public void testshutdown() {
-		openstackInfrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-				"http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+		openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+				"http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
+				"wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
 		openstackInfrastructure.connectorIaasClient = connectorIaasClient;
 		openstackInfrastructure.infrastructureId = "nodename";
