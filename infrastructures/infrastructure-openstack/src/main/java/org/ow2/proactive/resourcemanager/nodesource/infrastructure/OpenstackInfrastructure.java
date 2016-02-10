@@ -94,7 +94,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
 	protected String downloadCommand = generateDefaultDownloadCommand();
 
 	@Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
-	protected String additionalProperties = "";
+	protected String additionalProperties = "-Dproactive.useIPaddress=true";
 
 	protected String infrastructureId = null;
 

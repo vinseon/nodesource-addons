@@ -69,7 +69,7 @@ public class OpenstackInfrastructureTest {
 					is("wget -nv " + openstackInfrastructure.rmHostname + "/rest/node.jar"));
 
 		}
-		assertThat(openstackInfrastructure.additionalProperties, is(""));
+		assertThat(openstackInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
 
 	}
 
