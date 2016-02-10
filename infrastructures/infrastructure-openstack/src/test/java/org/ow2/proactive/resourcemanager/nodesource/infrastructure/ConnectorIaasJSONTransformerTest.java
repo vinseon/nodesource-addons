@@ -34,7 +34,7 @@ public class ConnectorIaasJSONTransformerTest {
 		assertThat(actual.getString("number"), is("number"));
 		assertThat(actual.getJSONObject("credentials").getString("publicKeyName"), is("publicKeyName"));
 		assertThat(actual.getJSONObject("hardware").getString("type"), is("type"));
-		assertThat(actual.getJSONObject("script").getJSONArray("scripts").length(), is(0));
+		assertThat(actual.getJSONObject("initScript").getJSONArray("scripts").length(), is(0));
 	}
 
 }

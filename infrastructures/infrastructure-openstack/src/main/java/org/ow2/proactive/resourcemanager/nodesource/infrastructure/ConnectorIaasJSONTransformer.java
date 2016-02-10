@@ -28,7 +28,7 @@ public class ConnectorIaasJSONTransformer {
 		JSONObject script = new JSONObject();
 		script.put("scripts", new JSONArray(scripts));
 		return new JSONObject().put("tag", tag).put("image", image).put("number", number)
-				.put("credentials", credentials).put("hardware", hardware).put("script", script).toString();
+				.put("credentials", credentials).put("hardware", hardware).put("initScript", script).toString();
 	}
 
 }
