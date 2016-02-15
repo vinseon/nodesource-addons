@@ -53,21 +53,21 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 
-public class OpenstackInfrastructure extends InfrastructureManager {
+public class VMWareInfrastructure extends InfrastructureManager {
 
     public static final String INSTANCE_TAG_NODE_PROPERTY = "instanceTag";
 
-    public static final String INFRASTRUCTURE_TYPE = "openstack-nova";
+    public static final String INFRASTRUCTURE_TYPE = "vmware";
 
-    private static final Logger logger = Logger.getLogger(OpenstackInfrastructure.class);
+    private static final Logger logger = Logger.getLogger(VMWareInfrastructure.class);
 
-    @Configurable(description = "The Openstack_Username")
+    @Configurable(description = "The VMWare_Username")
     protected String username = null;
 
-    @Configurable(description = "The Openstack_Password")
+    @Configurable(description = "The VMWare_Password")
     protected String password = null;
 
-    @Configurable(description = "The Openstack_EndPoint")
+    @Configurable(description = "The VMWare_EndPoint")
     protected String endpoint = null;
 
     @Configurable(description = "Resource manager hostname or ip address")
@@ -79,11 +79,17 @@ public class OpenstackInfrastructure extends InfrastructureManager {
     @Configurable(description = "Image")
     protected String image = null;
 
-    @Configurable(description = "Flavor type of OpenStack")
-    protected int flavor = 3;
+    @Configurable(description = "minumum RAM required (in Mega Bytes)")
+    protected int ram = 512;
 
-    @Configurable(description = "Public key name for the instance")
-    protected String publicKeyName = null;
+    @Configurable(description = "minimum number of CPU cores required")
+    protected int cores = 1;
+
+    @Configurable(description = "The virtual machine Username")
+    protected String vmUsername = null;
+
+    @Configurable(description = "TThe virtual machine Password")
+    protected String vmPassword = null;
 
     @Configurable(description = "Total instance to create")
     protected int numberOfInstances = 1;
@@ -106,7 +112,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
     /**
      * Default constructor
      */
-    public OpenstackInfrastructure() {
+    public VMWareInfrastructure() {
         nodesPerInstances = Maps.newConcurrentMap();
     }
 
@@ -122,12 +128,14 @@ public class OpenstackInfrastructure extends InfrastructureManager {
         this.rmHostname = parameters[3].toString().trim();
         this.connectorIaasURL = parameters[4].toString().trim();
         this.image = parameters[5].toString().trim();
-        this.flavor = Integer.parseInt(parameters[6].toString().trim());
-        this.publicKeyName = parameters[7].toString().trim();
-        this.numberOfInstances = Integer.parseInt(parameters[8].toString().trim());
-        this.numberOfNodesPerInstance = Integer.parseInt(parameters[9].toString().trim());
-        this.downloadCommand = parameters[10].toString().trim();
-        this.additionalProperties = parameters[11].toString().trim();
+        this.ram = Integer.parseInt(parameters[6].toString().trim());
+        this.cores = Integer.parseInt(parameters[7].toString().trim());
+        this.vmUsername = parameters[8].toString().trim();
+        this.vmPassword = parameters[9].toString().trim();
+        this.numberOfInstances = Integer.parseInt(parameters[10].toString().trim());
+        this.numberOfNodesPerInstance = Integer.parseInt(parameters[11].toString().trim());
+        this.downloadCommand = parameters[12].toString().trim();
+        this.additionalProperties = parameters[13].toString().trim();
 
         connectorIaasClient = new ConnectorIaasClient(
             ConnectorIaasClient.generateRestClient(connectorIaasURL));
@@ -135,55 +143,66 @@ public class OpenstackInfrastructure extends InfrastructureManager {
     }
 
     private void validate(Object[] parameters) {
-        if (parameters == null || parameters.length < 12) {
-            throw new IllegalArgumentException("Invalid parameters for Openstack Infrastructure creation");
+        if (parameters == null || parameters.length < 14) {
+            throw new IllegalArgumentException("Invalid parameters for VMWareInfrastructure creation");
         }
 
         if (parameters[0] == null) {
-            throw new IllegalArgumentException("Openstack key must be specified");
+            throw new IllegalArgumentException("VMWare username must be specified");
         }
 
         if (parameters[1] == null) {
-            throw new IllegalArgumentException("Openstack secret key  must be specified");
+            throw new IllegalArgumentException("VMWare password must be specified");
         }
 
         if (parameters[2] == null) {
-            throw new IllegalArgumentException("The Resource manager hostname must be specified");
+            throw new IllegalArgumentException("VMWare endpoint must be specified");
         }
 
         if (parameters[3] == null) {
-            throw new IllegalArgumentException("The connector-iaas URL must be specified");
+            throw new IllegalArgumentException("The Resource manager hostname must be specified");
         }
 
         if (parameters[4] == null) {
-            throw new IllegalArgumentException("The image id must be specified");
+            throw new IllegalArgumentException("The connector-iaas URL must be specified");
         }
 
         if (parameters[5] == null) {
-            throw new IllegalArgumentException("The number of instances to create must be specified");
+            throw new IllegalArgumentException("The image id must be specified");
         }
 
         if (parameters[6] == null) {
+            throw new IllegalArgumentException("The amount of minimum RAM required must be specified");
+        }
+
+        if (parameters[7] == null) {
+            throw new IllegalArgumentException("The minimum number of cores required must be specified");
+        }
+
+        if (parameters[8] == null) {
+            throw new IllegalArgumentException("The virtual machine username must be specified");
+        }
+
+        if (parameters[8] == null) {
+            throw new IllegalArgumentException("The virtual machine password must be specified");
+        }
+
+        if (parameters[10] == null) {
+            throw new IllegalArgumentException("The number of instances to create must be specified");
+        }
+
+        if (parameters[11] == null) {
             throw new IllegalArgumentException(
                 "The number of nodes per instance to deploy must be specified");
         }
 
-        if (parameters[7] == null) {
+        if (parameters[12] == null) {
             throw new IllegalArgumentException("The download node.jar command must be specified");
         }
 
-        if (parameters[8] == null) {
-            parameters[8] = "";
+        if (parameters[13] == null) {
+            parameters[13] = "";
         }
-
-        if (parameters[9] == null) {
-            throw new IllegalArgumentException("The amount of minimum RAM required must be specified");
-        }
-
-        if (parameters[10] == null) {
-            throw new IllegalArgumentException("The minimum number of cores required must be specified");
-        }
-
     }
 
     private void createInfrastructure() {
@@ -208,23 +227,40 @@ public class OpenstackInfrastructure extends InfrastructureManager {
 
         createInfrastructure();
 
-        for (int i = 1; i <= numberOfInstances; i++) {
+        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image,
+                "" + numberOfInstances, "" + cores, "" + ram);
 
-            String instanceTag = infrastructureId + "_" + i;
+        logger.info("InstanceJson : " + instanceJson);
 
+        Set<String> instancesIds = connectorIaasClient.createInstances(infrastructureId, instanceJson);
+
+        logger.info("Instances ids created : " + instancesIds);
+
+        for (String instanceId : instancesIds) {
             List<String> scripts = Lists.newArrayList(this.downloadCommand,
-                    "nohup " + generateDefaultStartNodeCommand(instanceTag) + "  &");
+                    "-c 'nohup " + generateDefaultStartNodeCommand(instanceId) + "  &'");
+            String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts,
+                    vmUsername, vmPassword);
 
-            String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "1",
-                    publicKeyName, String.valueOf(flavor), scripts);
-
-            logger.info("InstanceJson : " + instanceJson);
-
-            Set<String> instancesIds = connectorIaasClient.createInstances(infrastructureId, instanceJson);
-
-            logger.info("Instances ids created : " + instancesIds);
+            executeScript(instanceId, instanceScriptJson);
         }
 
+    }
+
+    private void executeScript(String instanceId, String instanceScriptJson) {
+        String scriptResult = null;
+        try {
+            scriptResult = connectorIaasClient.runScriptOnInstance(infrastructureId, instanceId,
+                    instanceScriptJson);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Executed successfully script for instance id :" + instanceId +
+                    "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
+            } else {
+                logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
+            }
+        } catch (Exception e) {
+            logger.error("Error while executing script :\n" + instanceScriptJson, e);
+        }
     }
 
     @Override
@@ -311,7 +347,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
             return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmHostname +
                 "/rest/node.jar" + "', 'node.jar') }\"";
         } else {
-            return "wget -nv " + this.rmHostname + "/rest/node.jar";
+            return "-c \"wget -nv " + this.rmHostname + "/rest/node.jar\"";
         }
     }
 
