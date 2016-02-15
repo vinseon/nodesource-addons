@@ -52,7 +52,7 @@ public class RestClient {
     public String postToScriptsWebResource(String infrastructureId, String key, String value,
             String scriptJson) {
         WebResource scriptsWebResource = jerseyClient
-                .resource(connectorIaasURL + "/infrastructures/" + infrastructureId + "/instance/scripts");
+                .resource(connectorIaasURL + "/infrastructures/" + infrastructureId + "/instances/scripts");
         return checkResponseIsOK(scriptsWebResource.queryParam(key, value).type("application/json")
                 .post(ClientResponse.class, scriptJson));
     }
