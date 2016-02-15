@@ -1,3 +1,4 @@
 include 'infrastructures:infrastructure-winhpc'
 include 'infrastructures:infrastructure-aws-ec2'
 include 'infrastructures:infrastructure-openstack'
+include 'infrastructures:infrastructure-vmware'

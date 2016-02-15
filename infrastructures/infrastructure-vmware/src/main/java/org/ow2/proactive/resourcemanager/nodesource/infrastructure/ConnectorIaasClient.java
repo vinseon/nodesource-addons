@@ -74,6 +74,11 @@ public class ConnectorIaasClient {
         restClient.deleteInfrastructuresWebResource(infrastructureId);
     }
 
+    public String runScriptOnInstance(String infrastructureId, String instanceId, String instanceScriptJson) {
+        return restClient.postToScriptsWebResource(infrastructureId, "instanceId", instanceId,
+                instanceScriptJson);
+    }
+
     private void sleepFor(long millisecondsToSleep) {
         try {
             Thread.sleep(millisecondsToSleep);

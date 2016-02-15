@@ -1,0 +1,4 @@
+dependencies {
+    compile 'com.sun.jersey:jersey-client:1.9.1'
+    compile 'org.json:json:20151123'
+}
