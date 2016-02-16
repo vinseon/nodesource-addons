@@ -190,8 +190,8 @@ public class OpenstackInfrastructure extends InfrastructureManager {
 
         infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
-                INFRASTRUCTURE_TYPE, username, password, endpoint);
+        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
+                infrastructureId, INFRASTRUCTURE_TYPE, username, password, endpoint);
 
         logger.info("Creating infrastructure : " + infrastructureJson);
 
@@ -215,8 +215,8 @@ public class OpenstackInfrastructure extends InfrastructureManager {
             List<String> scripts = Lists.newArrayList(this.downloadCommand,
                     "nohup " + generateDefaultStartNodeCommand(instanceTag) + "  &");
 
-            String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image, "1",
-                    publicKeyName, String.valueOf(flavor), scripts);
+            String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSONWithPublicKeyAndScripts(
+                    instanceTag, image, "1", publicKeyName, String.valueOf(flavor), scripts);
 
             logger.info("InstanceJson : " + instanceJson);
 

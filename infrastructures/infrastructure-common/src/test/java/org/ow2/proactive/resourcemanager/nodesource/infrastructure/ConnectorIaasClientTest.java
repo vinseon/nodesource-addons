@@ -88,6 +88,15 @@ public class ConnectorIaasClientTest {
     }
 
     @Test
+    public void testTerminateInstanceByTag() {
+
+        connectorIaasClient.terminateInstanceByTag("infra123", "123456");
+
+        Mockito.verify(restClient).deleteToInstancesWebResource("infra123", "instanceTag", "123456");
+
+    }
+
+    @Test
     public void testTerminateInfrastructure() {
 
         connectorIaasClient.terminateInfrastructure("infra123");

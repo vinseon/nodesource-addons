@@ -69,7 +69,7 @@ public class VMWareInfrastructureTest {
                         openstackInfrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
         } else {
             assertThat(openstackInfrastructure.downloadCommand,
-                    is("-c \"wget -nv " + openstackInfrastructure.rmHostname + "/rest/node.jar\""));
+                    is("-c 'wget -nv " + openstackInfrastructure.rmHostname + "/rest/node.jar'"));
 
         }
         assertThat(openstackInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
@@ -108,8 +108,9 @@ public class VMWareInfrastructureTest {
 
         openstackInfrastructure.acquireNode();
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON("node_source_name",
-                VMWareInfrastructure.INFRASTRUCTURE_TYPE, "username", "password", "endpoint");
+        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
+                "node_source_name", VMWareInfrastructure.INFRASTRUCTURE_TYPE, "username", "password",
+                "endpoint");
 
         verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
 
