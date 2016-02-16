@@ -70,6 +70,10 @@ public class ConnectorIaasClient {
         restClient.deleteToInstancesWebResource(infrastructureId, "instanceId", instanceId);
     }
 
+    public void terminateInstanceByTag(String infrastructureId, String instanceTag) {
+        restClient.deleteToInstancesWebResource(infrastructureId, "instanceTag", instanceTag);
+    }
+
     public void terminateInfrastructure(String infrastructureId) {
         restClient.deleteInfrastructuresWebResource(infrastructureId);
     }

@@ -209,8 +209,8 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
-                INFRASTRUCTURE_TYPE, username, password, endpoint);
+        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
+                infrastructureId, INFRASTRUCTURE_TYPE, username, password, endpoint);
 
         logger.info("Creating infrastructure : " + infrastructureJson);
 
@@ -239,8 +239,8 @@ public class VMWareInfrastructure extends InfrastructureManager {
         for (String instanceId : instancesIds) {
             List<String> scripts = Lists.newArrayList(this.downloadCommand,
                     "-c 'nohup " + generateDefaultStartNodeCommand(instanceId) + "  &'");
-            String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts,
-                    vmUsername, vmPassword);
+            String instanceScriptJson = ConnectorIaasJSONTransformer
+                    .getScriptInstanceJSONWithCredentials(scripts, vmUsername, vmPassword);
 
             executeScript(instanceId, instanceScriptJson);
         }
@@ -347,7 +347,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
             return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmHostname +
                 "/rest/node.jar" + "', 'node.jar') }\"";
         } else {
-            return "-c \"wget -nv " + this.rmHostname + "/rest/node.jar\"";
+            return "-c 'wget -nv " + this.rmHostname + "/rest/node.jar'";
         }
     }
 
