@@ -1,47 +1,47 @@
 apply plugin: 'java'
-    apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'com.github.johnrengelman.shadow'
 
-	shadowJar {
-	
-	}
+shadowJar {
+
+}
    
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
-    
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
 
-    dependencies {
-        compile project(':infrastructures:infrastructure-common')
-        compile 'org.apache.axis2:axis2:1.4'
-        compile 'org.apache.ws.commons.axiom:axiom-api:1.2.7'
-        compile 'winhpc:WinHPCWebserviceStubs:1.0-proactive'
-        
-        testCompile files("${System.properties['java.home']}/../lib/tools.jar")
-    	testCompile 'junit:junit:4.12'
-		testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
-		testCompile 'org.mockito:mockito-core:1.10.19'
-    	
-    }
+
+dependencies {
+    compile project(':infrastructures:infrastructure-common')
+    compile 'org.apache.axis2:axis2:1.4'
+    compile 'org.apache.ws.commons.axiom:axiom-api:1.2.7'
+    compile 'winhpc:WinHPCWebserviceStubs:1.0-proactive'
     
-    configurations {
-	    shadowJar
+    testCompile files("${System.properties['java.home']}/../lib/tools.jar")
+	testCompile 'junit:junit:4.12'
+	testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
+	testCompile 'org.mockito:mockito-core:1.10.19'
 	
-	    runtime.extendsFrom = [compile]
-	    runtime.exclude module: 'rm-server'
-		runtime.exclude module: 'programming-core'
-		runtime.exclude module: 'guava'
-		runtime.exclude module: 'log4j'
-		
-	    testRuntime.extendsFrom = [testCompile]
-	}
+}
+    
+configurations {
+    shadowJar
+
+    runtime.extendsFrom = [compile]
+    runtime.exclude module: 'rm-server'
+	runtime.exclude module: 'programming-core'
+	runtime.exclude module: 'guava'
+	runtime.exclude module: 'log4j'
+	
+    testRuntime.extendsFrom = [testCompile]
+}
 
     
-    jar {
-        manifest {
-            attributes("Implementation-Title": "ProActive",
-                    "Implementation-Version": version,
-                    "Specification-Version": version,
-                    "Implementation-Vendor": "Activeeon - OASIS - INRIA Sophia Antipolis",
-                    "Implementation-URL": "http://proactive.inria.fr"
-            )
-        }
+jar {
+    manifest {
+        attributes("Implementation-Title": "ProActive",
+                "Implementation-Version": version,
+                "Specification-Version": version,
+                "Implementation-Vendor": "Activeeon - OASIS - INRIA Sophia Antipolis",
+                "Implementation-URL": "http://proactive.inria.fr"
+        )
     }
+}
