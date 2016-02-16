@@ -104,7 +104,7 @@ public class AWSEC2InfrastructureTest {
         awsec2Infrastructure.acquireNode();
 
         String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON("node_source_name",
-                AWSEC2Infrastructure.INFRASTRUCTURE_TYPE, "aws_key", "aws_secret_key");
+                AWSEC2Infrastructure.INFRASTRUCTURE_TYPE, "aws_key", "aws_secret_key", true);
 
         verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
 

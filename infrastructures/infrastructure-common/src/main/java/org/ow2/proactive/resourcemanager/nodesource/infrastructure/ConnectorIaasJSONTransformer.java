@@ -13,11 +13,17 @@ public class ConnectorIaasJSONTransformer {
 
     public static String getInfrastructureJSON(String infrastructureId, String type, String username,
             String password) {
+
+        return getInfrastructureJSON(infrastructureId, type, username, password, false);
+    }
+
+    public static String getInfrastructureJSON(String infrastructureId, String type, String username,
+            String password, boolean toBeRemovedOnShutdown) {
         JSONObject credentials = new JSONObject();
         credentials.put("username", username);
         credentials.put("password", password);
         return new JSONObject().put("id", infrastructureId).put("type", type).put("credentials", credentials)
-                .toString();
+                .put("toBeRemovedOnShutdown", toBeRemovedOnShutdown).toString();
     }
 
     public static String getInfrastructureJSONWithEndPoint(String infrastructureId, String type,

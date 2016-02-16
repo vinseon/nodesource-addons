@@ -187,7 +187,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
         String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
-                INFRASTRUCTURE_TYPE, aws_key, aws_secret_key);
+                INFRASTRUCTURE_TYPE, aws_key, aws_secret_key, true);
 
         logger.info("Creating infrastructure : " + infrastructureJson);
 
