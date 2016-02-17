@@ -14,11 +14,8 @@ public class ConnectorIaasClient {
 
     private static final Logger logger = Logger.getLogger(ConnectorIaasClient.class);
 
-    private static final int MAX_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS = 50;
-    private static final int SLEEP_TIME_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS = 5000;
-
-    private static final int MAX_RETRIES_TO_CHECK_INSTANCE_STATUS = 10;
-    private static final int SLEEP_TIME_RETRIES_TO_CHECK_INSTANCE_STATUS = 15000;
+    private static final int MAX_RETRIES_IN_CASE_OF_ERROR = 50;
+    private static final int SLEEP_TIME_RETRIES_IN_CASE_OF_ERROR = 5000;
 
     private final RestClient restClient;
 
@@ -37,11 +34,11 @@ public class ConnectorIaasClient {
                 restClient.getInfrastructures();
                 return;
             } catch (Exception e) {
-                if (++count == MAX_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS) {
+                if (++count == MAX_RETRIES_IN_CASE_OF_ERROR) {
                     logger.error(e);
                     throw e;
                 } else {
-                    sleepFor(SLEEP_TIME_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS);
+                    sleepFor(SLEEP_TIME_RETRIES_IN_CASE_OF_ERROR);
                 }
             }
         }
@@ -72,12 +69,12 @@ public class ConnectorIaasClient {
 
                 return;
             } catch (Exception e) {
-                if (++count == MAX_RETRIES_TO_CHECK_INSTANCE_STATUS) {
+                if (++count == MAX_RETRIES_IN_CASE_OF_ERROR) {
                     logger.error(e);
                     throw e;
                 } else {
                     logger.warn(e);
-                    sleepFor(SLEEP_TIME_RETRIES_TO_CHECK_INSTANCE_STATUS);
+                    sleepFor(SLEEP_TIME_RETRIES_IN_CASE_OF_ERROR);
                 }
             }
         }
@@ -117,8 +114,21 @@ public class ConnectorIaasClient {
     }
 
     public String runScriptOnInstance(String infrastructureId, String instanceId, String instanceScriptJson) {
-        return restClient.postToScriptsWebResource(infrastructureId, "instanceId", instanceId,
-                instanceScriptJson);
+        int count = 0;
+        while (true) {
+            try {
+                return restClient.postToScriptsWebResource(infrastructureId, "instanceId", instanceId,
+                        instanceScriptJson);
+            } catch (Exception e) {
+                if (++count == MAX_RETRIES_IN_CASE_OF_ERROR) {
+                    logger.error(e);
+                    throw e;
+                } else {
+                    sleepFor(SLEEP_TIME_RETRIES_IN_CASE_OF_ERROR);
+                }
+            }
+        }
+
     }
 
     private void sleepFor(long millisecondsToSleep) {
