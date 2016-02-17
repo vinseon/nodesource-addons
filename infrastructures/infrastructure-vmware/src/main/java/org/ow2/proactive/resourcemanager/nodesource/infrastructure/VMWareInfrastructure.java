@@ -55,7 +55,7 @@ import com.google.common.collect.Maps;
 
 public class VMWareInfrastructure extends InfrastructureManager {
 
-    public static final String INSTANCE_TAG_NODE_PROPERTY = "instanceTag";
+    public static final String INSTANCE_ID_NODE_PROPERTY = "instanceId";
 
     public static final String INFRASTRUCTURE_TYPE = "vmware";
 
@@ -344,10 +344,10 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
-            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmHostname +
-                "/rest/node.jar" + "', 'node.jar') }\"";
+            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
+                this.rmHostname + "/rest/node.jar" + "', 'node.jar') }\"";
         } else {
-            return "-c 'wget -nv " + this.rmHostname + "/rest/node.jar'";
+            return "-c 'wget -nv http://" + this.rmHostname + "/rest/node.jar'";
         }
     }
 
@@ -357,12 +357,12 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
             String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
             return "java -jar node.jar -Dproactive.communication.protocol=" + protocol +
-                " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_TAG_NODE_PROPERTY + "=" +
+                " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
                 instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " +
                 nodeSource.getName() + " -w " + numberOfNodesPerInstance;
         } catch (Exception e) {
             logger.error("Exception when generating the command, fallback on default value", e);
-            return "java -jar node.jar -D" + INSTANCE_TAG_NODE_PROPERTY + "=" + instanceId + " " +
+            return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " +
                 additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " +
                 numberOfNodesPerInstance;
         }
@@ -370,7 +370,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
     private String getInstanceIdProperty(Node node) throws RMException {
         try {
-            return node.getProperty(INSTANCE_TAG_NODE_PROPERTY);
+            return node.getProperty(INSTANCE_ID_NODE_PROPERTY);
         } catch (ProActiveException e) {
             throw new RMException(e);
         }
