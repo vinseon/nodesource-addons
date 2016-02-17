@@ -39,7 +39,6 @@ package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -239,10 +238,12 @@ public class VMWareInfrastructure extends InfrastructureManager {
         logger.info("Instances ids created : " + instancesIds);
 
         for (String instanceId : instancesIds) {
-            List<String> scripts = Lists.newArrayList(this.downloadCommand,
-                    "-c 'nohup " + generateDefaultStartNodeCommand(instanceId) + "  &'");
-            String instanceScriptJson = ConnectorIaasJSONTransformer
-                    .getScriptInstanceJSONWithCredentials(scripts, vmUsername, vmPassword);
+
+            String fullScript = "-c '" + this.downloadCommand + ";nohup" +
+                generateDefaultStartNodeCommand(instanceId) + "  &'";
+
+            String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSONWithCredentials(
+                    Lists.newArrayList(fullScript), vmUsername, vmPassword);
 
             executeScript(instanceId, instanceScriptJson);
         }
@@ -349,7 +350,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
             return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
                 this.rmHostname + "/rest/node.jar" + "', 'node.jar') }\"";
         } else {
-            return "-c 'wget -nv http://" + this.rmHostname + "/rest/node.jar'";
+            return "wget -nv http://" + this.rmHostname + ":8080/rest/node.jar";
         }
     }
 

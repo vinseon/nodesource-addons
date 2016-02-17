@@ -69,7 +69,7 @@ public class VMWareInfrastructureTest {
                         openstackInfrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
         } else {
             assertThat(openstackInfrastructure.downloadCommand,
-                    is("-c 'wget -nv http://" + openstackInfrastructure.rmHostname + "/rest/node.jar'"));
+                    is("wget -nv http://" + openstackInfrastructure.rmHostname + ":8080/rest/node.jar"));
 
         }
         assertThat(openstackInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
