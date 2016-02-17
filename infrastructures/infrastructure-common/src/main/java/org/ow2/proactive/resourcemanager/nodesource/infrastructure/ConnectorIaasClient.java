@@ -17,6 +17,9 @@ public class ConnectorIaasClient {
     private static final int MAX_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS = 50;
     private static final int SLEEP_TIME_RETRIES_TO_CONNECT_TO_CONNECTOR_IAAS = 5000;
 
+    private static final int MAX_RETRIES_TO_CHECK_INSTANCE_STATUS = 10;
+    private static final int SLEEP_TIME_RETRIES_TO_CHECK_INSTANCE_STATUS = 15000;
+
     private final RestClient restClient;
 
     public static RestClient generateRestClient(String connectorIaasURL) {
@@ -43,6 +46,41 @@ public class ConnectorIaasClient {
             }
         }
 
+    }
+
+    public void waitForAllInstancesStatus(Set<String> instancesIds, String status) {
+        int count = 0;
+        while (true) {
+            try {
+                String response = restClient.getInfrastructures();
+
+                JSONArray instancesJSONObjects = new JSONArray(response);
+
+                Iterator<Object> instancesJSONObjectsIterator = instancesJSONObjects.iterator();
+
+                while (instancesJSONObjectsIterator.hasNext()) {
+                    JSONObject instance = ((JSONObject) instancesJSONObjectsIterator.next());
+
+                    if (instancesIds.contains(instance.getString("id"))) {
+                        if (!instance.getString("status").equals(status)) {
+                            throw new RuntimeException("status for instance id : " +
+                                instance.getString("id") + " is not as expected (" + status + ") status = " +
+                                instance.getString("status"));
+                        }
+                    }
+                }
+
+                return;
+            } catch (Exception e) {
+                if (++count == MAX_RETRIES_TO_CHECK_INSTANCE_STATUS) {
+                    logger.error(e);
+                    throw e;
+                } else {
+                    logger.warn(e);
+                    sleepFor(SLEEP_TIME_RETRIES_TO_CHECK_INSTANCE_STATUS);
+                }
+            }
+        }
     }
 
     public String createInfrastructure(String infrastructureId, String infrastructureJson) {
