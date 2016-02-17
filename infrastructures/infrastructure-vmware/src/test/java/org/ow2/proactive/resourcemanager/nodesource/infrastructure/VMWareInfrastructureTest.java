@@ -65,11 +65,11 @@ public class VMWareInfrastructureTest {
         assertThat(openstackInfrastructure.numberOfNodesPerInstance, is(1));
         if (System.getProperty("os.name").contains("Windows")) {
             assertThat(openstackInfrastructure.downloadCommand,
-                    is("powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" +
+                    is("powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
                         openstackInfrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
         } else {
             assertThat(openstackInfrastructure.downloadCommand,
-                    is("-c 'wget -nv " + openstackInfrastructure.rmHostname + "/rest/node.jar'"));
+                    is("-c 'wget -nv http://" + openstackInfrastructure.rmHostname + "/rest/node.jar'"));
 
         }
         assertThat(openstackInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
@@ -144,7 +144,7 @@ public class VMWareInfrastructureTest {
         when(nodeSource.getName()).thenReturn("node source name");
         openstackInfrastructure.nodeSource = nodeSource;
 
-        when(node.getProperty(VMWareInfrastructure.INSTANCE_TAG_NODE_PROPERTY)).thenReturn("123");
+        when(node.getProperty(VMWareInfrastructure.INSTANCE_ID_NODE_PROPERTY)).thenReturn("123");
 
         when(node.getNodeInformation()).thenReturn(nodeInformation);
 
@@ -172,7 +172,7 @@ public class VMWareInfrastructureTest {
 
         openstackInfrastructure.connectorIaasClient = connectorIaasClient;
 
-        when(node.getProperty(VMWareInfrastructure.INSTANCE_TAG_NODE_PROPERTY)).thenReturn("123");
+        when(node.getProperty(VMWareInfrastructure.INSTANCE_ID_NODE_PROPERTY)).thenReturn("123");
 
         when(node.getNodeInformation()).thenReturn(nodeInformation);
 
