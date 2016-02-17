@@ -59,8 +59,8 @@ configure(javaSubprojects) {
     
     sonarRunner {
 	    sonarProperties {    
-	    	property "sonar.projectKey", "$project.group:Nodesource-addons"
-	    	property "sonar.projectName", "Nodesource-addons" 
+	    	property "sonar.projectKey", "$project.group:nodesource-addons"
+	    	property "sonar.projectName", "nodesource-addons" 
 	        property "sonar.jdbc.driverClassName", "org.postgresql.Driver"
 	        property "sonar.language", "java"
 	        property "sonar.sources", "src/main"
