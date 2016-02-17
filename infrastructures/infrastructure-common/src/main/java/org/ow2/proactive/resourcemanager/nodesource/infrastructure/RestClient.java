@@ -20,13 +20,22 @@ public class RestClient {
     public String getInfrastructures() {
         WebResource infrastructuresWebResource = jerseyClient.resource(connectorIaasURL + "/infrastructures");
         return checkResponseIsOK(
-                infrastructuresWebResource.type("application/json").get(ClientResponse.class));
+                infrastructuresWebResource.type("application/json").get(ClientResponse.class))
+                        .getEntity(String.class);
+    }
+
+    public String getInstancesByInfrastructure(String infrastructureId) {
+        WebResource infrastructuresWebResource = jerseyClient
+                .resource(connectorIaasURL + "/infrastructures/" + infrastructureId + "/instances");
+        return checkResponseIsOK(
+                infrastructuresWebResource.type("application/json").get(ClientResponse.class))
+                        .getEntity(String.class);
     }
 
     public String postToInfrastructuresWebResource(String infrastructureJson) {
         WebResource infrastructuresWebResource = jerseyClient.resource(connectorIaasURL + "/infrastructures");
         return checkResponseIsOK(infrastructuresWebResource.type("application/json")
-                .post(ClientResponse.class, infrastructureJson));
+                .post(ClientResponse.class, infrastructureJson)).getEntity(String.class);
     }
 
     public void deleteInfrastructuresWebResource(String infrastructureId) {
@@ -39,7 +48,8 @@ public class RestClient {
         WebResource instancesWebResource = jerseyClient
                 .resource(connectorIaasURL + "/infrastructures/" + infrastructureId + "/instances");
         return checkResponseIsOK(
-                instancesWebResource.type("application/json").post(ClientResponse.class, instanceJson));
+                instancesWebResource.type("application/json").post(ClientResponse.class, instanceJson))
+                        .getEntity(String.class);
     }
 
     public void deleteToInstancesWebResource(String infrastructureId, String key, String value) {
@@ -54,14 +64,14 @@ public class RestClient {
         WebResource scriptsWebResource = jerseyClient
                 .resource(connectorIaasURL + "/infrastructures/" + infrastructureId + "/instances/scripts");
         return checkResponseIsOK(scriptsWebResource.queryParam(key, value).type("application/json")
-                .post(ClientResponse.class, scriptJson));
+                .post(ClientResponse.class, scriptJson)).getEntity(String.class);
     }
 
-    private String checkResponseIsOK(ClientResponse response) {
+    private ClientResponse checkResponseIsOK(ClientResponse response) {
         if (response.getStatus() != Status.OK.getStatusCode()) {
             throw new RuntimeException("Failed : HTTP error code : " + response.getStatus());
         }
-        return response.getEntity(String.class);
+        return response;
     }
 
 }

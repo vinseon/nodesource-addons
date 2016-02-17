@@ -48,11 +48,11 @@ public class ConnectorIaasClient {
 
     }
 
-    public void waitForAllInstancesStatus(Set<String> instancesIds, String status) {
+    public void waitForAllInstancesStatus(String infrastructureId, Set<String> instancesIds, String status) {
         int count = 0;
         while (true) {
             try {
-                String response = restClient.getInfrastructures();
+                String response = restClient.getInstancesByInfrastructure(infrastructureId);
 
                 JSONArray instancesJSONObjects = new JSONArray(response);
 

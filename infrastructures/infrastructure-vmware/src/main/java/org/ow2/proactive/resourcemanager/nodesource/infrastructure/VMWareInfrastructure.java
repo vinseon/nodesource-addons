@@ -234,7 +234,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         Set<String> instancesIds = connectorIaasClient.createInstances(infrastructureId, instanceJson);
 
-        connectorIaasClient.waitForAllInstancesStatus(instancesIds, "green");
+        connectorIaasClient.waitForAllInstancesStatus(infrastructureId, instancesIds, "green");
 
         logger.info("Instances ids created : " + instancesIds);
 
