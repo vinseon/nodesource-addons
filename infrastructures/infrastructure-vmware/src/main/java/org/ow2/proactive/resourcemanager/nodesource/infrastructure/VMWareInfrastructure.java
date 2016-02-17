@@ -239,7 +239,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         for (String instanceId : instancesIds) {
 
-            String fullScript = "-c '" + this.downloadCommand + ";nohup" +
+            String fullScript = "-c '" + this.downloadCommand + ";nohup " +
                 generateDefaultStartNodeCommand(instanceId) + "  &'";
 
             String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSONWithCredentials(
