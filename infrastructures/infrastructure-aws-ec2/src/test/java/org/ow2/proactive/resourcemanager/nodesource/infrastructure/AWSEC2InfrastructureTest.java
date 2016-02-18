@@ -4,12 +4,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -29,7 +28,7 @@ public class AWSEC2InfrastructureTest {
     private AWSEC2Infrastructure awsec2Infrastructure;
 
     @Mock
-    private ConnectorIaasClient connectorIaasClient;
+    private ConnectorIaasController connectorIaasController;
     @Mock
     private NodeSource nodeSource;
     @Mock
@@ -93,33 +92,28 @@ public class AWSEC2InfrastructureTest {
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
-        awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
-        when(nodeSource.getName()).thenReturn("node source name");
+        awsec2Infrastructure.connectorIaasController = connectorIaasController;
+        when(nodeSource.getName()).thenReturn("node_source_name");
         awsec2Infrastructure.nodeSource = nodeSource;
         awsec2Infrastructure.rmUrl = "http://test.activeeon.com";
 
-        Set<String> instanceIds = Sets.newHashSet("123", "456");
-        when(connectorIaasClient.createInstances(anyString(), anyString())).thenReturn(instanceIds);
+        when(connectorIaasController.createInfrastructure("node_source_name", "aws_key", "aws_secret_key",
+                null, true)).thenReturn("node_source_name");
+
+        when(connectorIaasController.createInstances("node_source_name", "node_source_name", "aws-image", 2,
+                1, 512)).thenReturn(Sets.newHashSet("123", "456"));
 
         awsec2Infrastructure.acquireNode();
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON("node_source_name",
-                AWSEC2Infrastructure.INFRASTRUCTURE_TYPE, "aws_key", "aws_secret_key", true);
+        verify(connectorIaasController, times(1)).waitForConnectorIaasToBeUP();
 
-        verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
+        verify(connectorIaasController).createInfrastructure("node_source_name", "aws_key", "aws_secret_key",
+                null, true);
 
-        verify(connectorIaasClient).createInfrastructure("node_source_name", infrastructureJson);
+        verify(connectorIaasController).createInstances("node_source_name", "node_source_name", "aws-image",
+                2, 1, 512);
 
-        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON("node_source_name", "aws-image",
-                "2", "1", "512");
-
-        verify(connectorIaasClient).createInstances("node_source_name", instanceJson);
-
-        String scripts123 = "{\"scripts\":[\"wget -nv test.activeeon.com/rest/node.jar\",\"nohup java -jar node.jar -Dproactive.communication.protocol=http -Dproactive.pamr.router.address=test.activeeon.com -DinstanceId=123 -Dnew=value -r http://test.activeeon.com -s node source name -w 3  &\"]}";
-        String scripts456 = "{\"scripts\":[\"wget -nv test.activeeon.com/rest/node.jar\",\"nohup java -jar node.jar -Dproactive.communication.protocol=http -Dproactive.pamr.router.address=test.activeeon.com -DinstanceId=456 -Dnew=value -r http://test.activeeon.com -s node source name -w 3  &\"]}";
-
-        verify(connectorIaasClient, times(1)).runScriptOnInstance("node_source_name", "123", scripts123);
-        verify(connectorIaasClient, times(1)).runScriptOnInstance("node_source_name", "456", scripts456);
+        verify(connectorIaasController, times(2)).executeScript(anyString(), anyString(), anyList());
 
     }
 
@@ -134,7 +128,7 @@ public class AWSEC2InfrastructureTest {
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
-        awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
+        awsec2Infrastructure.connectorIaasController = connectorIaasController;
 
         when(nodeSource.getName()).thenReturn("node source name");
         awsec2Infrastructure.nodeSource = nodeSource;
@@ -153,7 +147,7 @@ public class AWSEC2InfrastructureTest {
 
         verify(proActiveRuntime).killNode("nodename");
 
-        verify(connectorIaasClient).terminateInstance(null, "123");
+        verify(connectorIaasController).terminateInstance(null, "123");
 
         assertThat(awsec2Infrastructure.nodesPerInstances.isEmpty(), is(true));
 
@@ -165,7 +159,7 @@ public class AWSEC2InfrastructureTest {
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
-        awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
+        awsec2Infrastructure.connectorIaasController = connectorIaasController;
 
         when(node.getProperty(AWSEC2Infrastructure.INSTANCE_ID_NODE_PROPERTY)).thenReturn("123");
 
@@ -185,24 +179,6 @@ public class AWSEC2InfrastructureTest {
     public void testGetDescription() {
         assertThat(awsec2Infrastructure.getDescription(),
                 is("Handles nodes from the Amazon Elastic Compute Cloud Service."));
-    }
-
-    @Test
-    public void testshutdown() {
-        awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
-
-        awsec2Infrastructure.connectorIaasClient = connectorIaasClient;
-        awsec2Infrastructure.infrastructureId = "nodename";
-
-        awsec2Infrastructure.nodesPerInstances.put("123", Sets.newHashSet("nodeurl"));
-
-        awsec2Infrastructure.shutDown();
-
-        assertThat(awsec2Infrastructure.nodesPerInstances.isEmpty(), is(true));
-
-        verify(connectorIaasClient).terminateInfrastructure("nodename");
     }
 
 }

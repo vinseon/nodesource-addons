@@ -104,7 +104,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
     protected String infrastructureId = null;
 
-    protected ConnectorIaasClient connectorIaasClient = null;
+    protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
 
@@ -136,8 +136,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
         this.downloadCommand = parameters[12].toString().trim();
         this.additionalProperties = parameters[13].toString().trim();
 
-        connectorIaasClient = new ConnectorIaasClient(
-            ConnectorIaasClient.generateRestClient(connectorIaasURL));
+        connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
     }
 
@@ -204,36 +203,18 @@ public class VMWareInfrastructure extends InfrastructureManager {
         }
     }
 
-    private void createInfrastructure() {
-
-        infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
-
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
-                infrastructureId, INFRASTRUCTURE_TYPE, username, password, endpoint);
-
-        logger.info("Creating infrastructure : " + infrastructureJson);
-
-        connectorIaasClient.createInfrastructure(infrastructureId, infrastructureJson);
-
-        logger.info("Infrastructure created");
-
-    }
-
     @Override
     public void acquireNode() {
 
-        connectorIaasClient.waitForConnectorIaasToBeUP();
+        connectorIaasController.waitForConnectorIaasToBeUP();
 
-        createInfrastructure();
+        String infrastructureId = connectorIaasController.createInfrastructure(nodeSource.getName(), username,
+                password, endpoint, false);
 
-        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image,
-                "" + numberOfInstances, "" + cores, "" + ram);
+        String instanceTag = infrastructureId;
 
-        logger.info("InstanceJson : " + instanceJson);
-
-        Set<String> instancesIds = connectorIaasClient.createInstances(infrastructureId, instanceJson);
-
-        connectorIaasClient.waitForAllInstancesStatus(infrastructureId, instancesIds, "green");
+        Set<String> instancesIds = connectorIaasController.createInstances(infrastructureId, instanceTag,
+                image, numberOfInstances, cores, ram);
 
         logger.info("Instances ids created : " + instancesIds);
 
@@ -242,28 +223,10 @@ public class VMWareInfrastructure extends InfrastructureManager {
             String fullScript = "-c '" + this.downloadCommand + ";nohup " +
                 generateDefaultStartNodeCommand(instanceId) + "  &'";
 
-            String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSONWithCredentials(
-                    Lists.newArrayList(fullScript), vmUsername, vmPassword);
-
-            executeScript(instanceId, instanceScriptJson);
+            connectorIaasController.executeScript(infrastructureId, instanceId,
+                    Lists.newArrayList(fullScript));
         }
 
-    }
-
-    private void executeScript(String instanceId, String instanceScriptJson) {
-        String scriptResult = null;
-        try {
-            scriptResult = connectorIaasClient.runScriptOnInstance(infrastructureId, instanceId,
-                    instanceScriptJson);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Executed successfully script for instance id :" + instanceId +
-                    "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
-            } else {
-                logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
-            }
-        } catch (Exception e) {
-            logger.error("Error while executing script :\n" + instanceScriptJson, e);
-        }
     }
 
     @Override
@@ -288,21 +251,11 @@ public class VMWareInfrastructure extends InfrastructureManager {
             logger.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
-                connectorIaasClient.terminateInstance(infrastructureId, instanceId);
+                connectorIaasController.terminateInstance(infrastructureId, instanceId);
                 nodesPerInstances.remove(instanceId);
                 logger.info("Removed instance : " + instanceId);
             }
         }
-    }
-
-    @Override
-    public void shutDown() {
-        logger.info("Terminating the infrastructure: " + infrastructureId);
-        synchronized (this) {
-            connectorIaasClient.terminateInfrastructure(infrastructureId);
-            nodesPerInstances.clear();
-        }
-        logger.info("Infrastructure: " + infrastructureId + " terminated");
     }
 
     @Override
@@ -321,10 +274,6 @@ public class VMWareInfrastructure extends InfrastructureManager {
     @Override
     public String getDescription() {
         return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
-    }
-
-    public static void main(String[] args) {
-        System.out.println(System.getProperty("os.name"));
     }
 
     /**

@@ -99,7 +99,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
 
     protected String infrastructureId = null;
 
-    protected ConnectorIaasClient connectorIaasClient = null;
+    protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
 
@@ -129,8 +129,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
         this.downloadCommand = parameters[10].toString().trim();
         this.additionalProperties = parameters[11].toString().trim();
 
-        connectorIaasClient = new ConnectorIaasClient(
-            ConnectorIaasClient.generateRestClient(connectorIaasURL));
+        connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
     }
 
@@ -186,27 +185,13 @@ public class OpenstackInfrastructure extends InfrastructureManager {
 
     }
 
-    private void createInfrastructure() {
-
-        infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
-
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
-                infrastructureId, INFRASTRUCTURE_TYPE, username, password, endpoint);
-
-        logger.info("Creating infrastructure : " + infrastructureJson);
-
-        connectorIaasClient.createInfrastructure(infrastructureId, infrastructureJson);
-
-        logger.info("Infrastructure created");
-
-    }
-
     @Override
     public void acquireNode() {
 
-        connectorIaasClient.waitForConnectorIaasToBeUP();
+        connectorIaasController.waitForConnectorIaasToBeUP();
 
-        createInfrastructure();
+        connectorIaasController.createInfrastructure(nodeSource.getName(), username, password, endpoint,
+                false);
 
         for (int i = 1; i <= numberOfInstances; i++) {
 
@@ -215,14 +200,8 @@ public class OpenstackInfrastructure extends InfrastructureManager {
             List<String> scripts = Lists.newArrayList(this.downloadCommand,
                     "nohup " + generateDefaultStartNodeCommand(instanceTag) + "  &");
 
-            String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSONWithPublicKeyAndScripts(
-                    instanceTag, image, "1", publicKeyName, String.valueOf(flavor), scripts);
-
-            logger.info("InstanceJson : " + instanceJson);
-
-            Set<String> instancesIds = connectorIaasClient.createInstances(infrastructureId, instanceJson);
-
-            logger.info("Instances ids created : " + instancesIds);
+            connectorIaasController.createInstancesWithPublicKeyNameAndInitScript(infrastructureId,
+                    instanceTag, image, 1, flavor, publicKeyName, scripts);
         }
 
     }
@@ -249,21 +228,11 @@ public class OpenstackInfrastructure extends InfrastructureManager {
             logger.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
-                connectorIaasClient.terminateInstance(infrastructureId, instanceId);
+                connectorIaasController.terminateInstance(infrastructureId, instanceId);
                 nodesPerInstances.remove(instanceId);
                 logger.info("Removed instance : " + instanceId);
             }
         }
-    }
-
-    @Override
-    public void shutDown() {
-        logger.info("Terminating the infrastructure: " + infrastructureId);
-        synchronized (this) {
-            connectorIaasClient.terminateInfrastructure(infrastructureId);
-            nodesPerInstances.clear();
-        }
-        logger.info("Infrastructure: " + infrastructureId + " terminated");
     }
 
     @Override
@@ -282,10 +251,6 @@ public class OpenstackInfrastructure extends InfrastructureManager {
     @Override
     public String getDescription() {
         return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
-    }
-
-    public static void main(String[] args) {
-        System.out.println(System.getProperty("os.name"));
     }
 
     /**

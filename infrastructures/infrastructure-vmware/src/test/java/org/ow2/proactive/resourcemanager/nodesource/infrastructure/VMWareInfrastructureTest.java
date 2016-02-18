@@ -4,13 +4,11 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,16 +20,15 @@ import org.objectweb.proactive.core.node.NodeInformation;
 import org.objectweb.proactive.core.runtime.ProActiveRuntime;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.NodeSource;
-import org.python.google.common.collect.Lists;
 import org.python.google.common.collect.Sets;
 
 
 public class VMWareInfrastructureTest {
 
-    private VMWareInfrastructure openstackInfrastructure;
+    private VMWareInfrastructure vmwareInfrastructure;
 
     @Mock
-    private ConnectorIaasClient connectorIaasClient;
+    private ConnectorIaasController connectorIaasController;
     @Mock
     private NodeSource nodeSource;
     @Mock
@@ -44,49 +41,49 @@ public class VMWareInfrastructureTest {
     @Before
     public void init() {
         MockitoAnnotations.initMocks(this);
-        openstackInfrastructure = new VMWareInfrastructure();
+        vmwareInfrastructure = new VMWareInfrastructure();
 
     }
 
     @Test
     public void testInitialParamateres() {
-        assertThat(openstackInfrastructure.username, is(nullValue()));
-        assertThat(openstackInfrastructure.password, is(nullValue()));
-        assertThat(openstackInfrastructure.endpoint, is(nullValue()));
-        assertThat(openstackInfrastructure.ram, is(512));
-        assertThat(openstackInfrastructure.cores, is(1));
-        assertThat(openstackInfrastructure.vmUsername, is(nullValue()));
-        assertThat(openstackInfrastructure.vmPassword, is(nullValue()));
-        assertThat(openstackInfrastructure.rmHostname, is(not(nullValue())));
-        assertThat(openstackInfrastructure.connectorIaasURL,
-                is("http://" + openstackInfrastructure.rmHostname + ":8080/connector-iaas"));
-        assertThat(openstackInfrastructure.image, is(nullValue()));
-        assertThat(openstackInfrastructure.numberOfInstances, is(1));
-        assertThat(openstackInfrastructure.numberOfNodesPerInstance, is(1));
+        assertThat(vmwareInfrastructure.username, is(nullValue()));
+        assertThat(vmwareInfrastructure.password, is(nullValue()));
+        assertThat(vmwareInfrastructure.endpoint, is(nullValue()));
+        assertThat(vmwareInfrastructure.ram, is(512));
+        assertThat(vmwareInfrastructure.cores, is(1));
+        assertThat(vmwareInfrastructure.vmUsername, is(nullValue()));
+        assertThat(vmwareInfrastructure.vmPassword, is(nullValue()));
+        assertThat(vmwareInfrastructure.rmHostname, is(not(nullValue())));
+        assertThat(vmwareInfrastructure.connectorIaasURL,
+                is("http://" + vmwareInfrastructure.rmHostname + ":8080/connector-iaas"));
+        assertThat(vmwareInfrastructure.image, is(nullValue()));
+        assertThat(vmwareInfrastructure.numberOfInstances, is(1));
+        assertThat(vmwareInfrastructure.numberOfNodesPerInstance, is(1));
         if (System.getProperty("os.name").contains("Windows")) {
-            assertThat(openstackInfrastructure.downloadCommand,
+            assertThat(vmwareInfrastructure.downloadCommand,
                     is("powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
-                        openstackInfrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
+                        vmwareInfrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
         } else {
-            assertThat(openstackInfrastructure.downloadCommand,
-                    is("wget -nv http://" + openstackInfrastructure.rmHostname + ":8080/rest/node.jar"));
+            assertThat(vmwareInfrastructure.downloadCommand,
+                    is("wget -nv http://" + vmwareInfrastructure.rmHostname + ":8080/rest/node.jar"));
 
         }
-        assertThat(openstackInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
+        assertThat(vmwareInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
 
     }
 
     @Test
     public void testConfigure() {
-        openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "openstack-image", "1", "512", "vmUsername",
+        vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+                "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
                 "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void tesConfigureNotEnoughParameters() {
 
-        openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+        vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
     }
@@ -94,38 +91,32 @@ public class VMWareInfrastructureTest {
     @Test
     public void testAcquireNode() {
 
-        openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "openstack-image", "512", "1", "vmUsername",
+        vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+                "http://localhost:8088/connector-iaas", "vmware-image", "512", "1", "vmUsername",
                 "vmPassword", "1", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
-        when(nodeSource.getName()).thenReturn("node source name");
-        openstackInfrastructure.nodeSource = nodeSource;
-        openstackInfrastructure.rmUrl = "http://test.activeeon.com";
+        vmwareInfrastructure.connectorIaasController = connectorIaasController;
+        when(nodeSource.getName()).thenReturn("node_source_name");
+        vmwareInfrastructure.nodeSource = nodeSource;
+        vmwareInfrastructure.rmUrl = "http://test.activeeon.com";
 
-        Set<String> instanceIds = Sets.newHashSet("123", "456");
-        when(connectorIaasClient.createInstances(anyString(), anyString())).thenReturn(instanceIds);
+        when(connectorIaasController.createInfrastructure("node_source_name", "username", "password",
+                "endpoint", false)).thenReturn("node_source_name");
 
-        openstackInfrastructure.acquireNode();
+        when(connectorIaasController.createInstances("node_source_name", "node_source_name", "vmware-image",
+                1, 1, 512)).thenReturn(Sets.newHashSet("123", "456"));
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
-                "node_source_name", VMWareInfrastructure.INFRASTRUCTURE_TYPE, "username", "password",
-                "endpoint");
+        vmwareInfrastructure.acquireNode();
 
-        verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
+        verify(connectorIaasController, times(1)).waitForConnectorIaasToBeUP();
 
-        verify(connectorIaasClient).createInfrastructure("node_source_name", infrastructureJson);
+        verify(connectorIaasController).createInfrastructure("node_source_name", "username", "password",
+                "endpoint", false);
 
-        List<String> scripts = Lists.newArrayList();
-        scripts.add("wget -nv test.activeeon.com/rest/node.jar");
-        scripts.add(
-                "nohup java -jar node.jar -Dproactive.communication.protocol=http -Dproactive.pamr.router.address=test.activeeon.com -DinstanceTag=node_source_name_1 -Dnew=value -r http://test.activeeon.com -s node source name -w 3  &");
+        verify(connectorIaasController).createInstances("node_source_name", "node_source_name",
+                "vmware-image", 1, 1, 512);
 
-        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON("node_source_name",
-                "openstack-image", "1", "1", "512");
-
-        verify(connectorIaasClient).createInstances("node_source_name", instanceJson);
-
+        verify(connectorIaasController, times(2)).executeScript(anyString(), anyString(), anyList());
     }
 
     @Test
@@ -135,14 +126,14 @@ public class VMWareInfrastructureTest {
 
     @Test
     public void testRemoveNode() throws ProActiveException, RMException {
-        openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "openstack-image", "1", "512", "vmUsername",
+        vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+                "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
                 "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
+        vmwareInfrastructure.connectorIaasController = connectorIaasController;
 
         when(nodeSource.getName()).thenReturn("node source name");
-        openstackInfrastructure.nodeSource = nodeSource;
+        vmwareInfrastructure.nodeSource = nodeSource;
 
         when(node.getProperty(VMWareInfrastructure.INSTANCE_ID_NODE_PROPERTY)).thenReturn("123");
 
@@ -152,25 +143,25 @@ public class VMWareInfrastructureTest {
 
         when(nodeInformation.getName()).thenReturn("nodename");
 
-        openstackInfrastructure.nodesPerInstances.put("123", Sets.newHashSet("nodename"));
+        vmwareInfrastructure.nodesPerInstances.put("123", Sets.newHashSet("nodename"));
 
-        openstackInfrastructure.removeNode(node);
+        vmwareInfrastructure.removeNode(node);
 
         verify(proActiveRuntime).killNode("nodename");
 
-        verify(connectorIaasClient).terminateInstance(null, "123");
+        verify(connectorIaasController).terminateInstance(null, "123");
 
-        assertThat(openstackInfrastructure.nodesPerInstances.isEmpty(), is(true));
+        assertThat(vmwareInfrastructure.nodesPerInstances.isEmpty(), is(true));
 
     }
 
     @Test
     public void testNotifyAcquiredNode() throws ProActiveException, RMException {
-        openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "openstack-image", "1", "512", "vmUsername",
+        vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
+                "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
                 "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
+        vmwareInfrastructure.connectorIaasController = connectorIaasController;
 
         when(node.getProperty(VMWareInfrastructure.INSTANCE_ID_NODE_PROPERTY)).thenReturn("123");
 
@@ -178,36 +169,18 @@ public class VMWareInfrastructureTest {
 
         when(nodeInformation.getName()).thenReturn("nodename");
 
-        openstackInfrastructure.notifyAcquiredNode(node);
+        vmwareInfrastructure.notifyAcquiredNode(node);
 
-        assertThat(openstackInfrastructure.nodesPerInstances.get("123").isEmpty(), is(false));
-        assertThat(openstackInfrastructure.nodesPerInstances.get("123").size(), is(1));
-        assertThat(openstackInfrastructure.nodesPerInstances.get("123").contains("nodename"), is(true));
+        assertThat(vmwareInfrastructure.nodesPerInstances.get("123").isEmpty(), is(false));
+        assertThat(vmwareInfrastructure.nodesPerInstances.get("123").size(), is(1));
+        assertThat(vmwareInfrastructure.nodesPerInstances.get("123").contains("nodename"), is(true));
 
     }
 
     @Test
     public void testGetDescription() {
-        assertThat(openstackInfrastructure.getDescription(),
+        assertThat(vmwareInfrastructure.getDescription(),
                 is("Handles nodes from the Amazon Elastic Compute Cloud Service."));
-    }
-
-    @Test
-    public void testshutdown() {
-        openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "openstack-image", "1", "512", "vmUsername",
-                "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
-
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
-        openstackInfrastructure.infrastructureId = "nodename";
-
-        openstackInfrastructure.nodesPerInstances.put("123", Sets.newHashSet("nodeurl"));
-
-        openstackInfrastructure.shutDown();
-
-        assertThat(openstackInfrastructure.nodesPerInstances.isEmpty(), is(true));
-
-        verify(connectorIaasClient).terminateInfrastructure("nodename");
     }
 
 }

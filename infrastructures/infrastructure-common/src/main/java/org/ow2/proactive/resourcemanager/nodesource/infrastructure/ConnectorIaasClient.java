@@ -45,39 +45,19 @@ public class ConnectorIaasClient {
 
     }
 
-    public void waitForAllInstancesStatus(String infrastructureId, Set<String> instancesIds, String status) {
-        int count = 0;
-        while (true) {
-            try {
-                String response = restClient.getInstancesByInfrastructure(infrastructureId);
+    public Set<JSONObject> getAllJsonInstancesByInfrastructureId(String infrastructureId) {
+        Set<JSONObject> existingInstances = Sets.newHashSet();
 
-                JSONArray instancesJSONObjects = new JSONArray(response);
+        JSONArray instancesJSONObjects = new JSONArray(
+            restClient.getInstancesByInfrastructure(infrastructureId));
 
-                Iterator<Object> instancesJSONObjectsIterator = instancesJSONObjects.iterator();
+        Iterator<Object> instancesJSONObjectsIterator = instancesJSONObjects.iterator();
 
-                while (instancesJSONObjectsIterator.hasNext()) {
-                    JSONObject instance = ((JSONObject) instancesJSONObjectsIterator.next());
-
-                    if (instancesIds.contains(instance.getString("id"))) {
-                        if (!instance.getString("status").equals(status)) {
-                            throw new RuntimeException("status for instance id : " +
-                                instance.getString("id") + " is not as expected (" + status + ") status = " +
-                                instance.getString("status"));
-                        }
-                    }
-                }
-
-                return;
-            } catch (Exception e) {
-                if (++count == MAX_RETRIES_IN_CASE_OF_ERROR) {
-                    logger.error(e);
-                    throw e;
-                } else {
-                    logger.warn(e);
-                    sleepFor(SLEEP_TIME_RETRIES_IN_CASE_OF_ERROR);
-                }
-            }
+        while (instancesJSONObjectsIterator.hasNext()) {
+            existingInstances.add(((JSONObject) instancesJSONObjectsIterator.next()));
         }
+
+        return existingInstances;
     }
 
     public String createInfrastructure(String infrastructureId, String infrastructureJson) {
@@ -85,7 +65,31 @@ public class ConnectorIaasClient {
         return restClient.postToInfrastructuresWebResource(infrastructureJson);
     }
 
-    public Set<String> createInstances(String infrastructureId, String instanceJson) {
+    public Set<String> createInstancesIfNotExisist(String infrastructureId, String instanceTag,
+            String instanceJson, Set<JSONObject> existingInstances) {
+        Set<String> instancesIds = getExistingInstanceIds(infrastructureId, instanceTag, existingInstances);
+
+        if (instancesIds.isEmpty()) {
+            instancesIds = createInstances(infrastructureId, instanceJson);
+        }
+
+        return instancesIds;
+    }
+
+    private Set<String> getExistingInstanceIds(String infrastructureId, String instanceTag,
+            Set<JSONObject> existingInstances) {
+        Set<String> instancesIds = Sets.newHashSet();
+
+        for (JSONObject instance : existingInstances) {
+            if (instance.getString("tag").equals(instanceTag)) {
+                instancesIds.add(instance.getString("id"));
+            }
+        }
+
+        return instancesIds;
+    }
+
+    private Set<String> createInstances(String infrastructureId, String instanceJson) {
         String response = restClient.postToInstancesWebResource(infrastructureId, instanceJson);
 
         JSONArray instancesJSONObjects = new JSONArray(response);
