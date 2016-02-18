@@ -226,7 +226,11 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         createInfrastructure();
 
-        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image,
+        String instanceTag = infrastructureId;
+
+        connectorIaasClient.terminateInstanceByTag(infrastructureId, instanceTag);
+
+        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image,
                 "" + numberOfInstances, "" + cores, "" + ram);
 
         logger.info("InstanceJson : " + instanceJson);
@@ -296,16 +300,6 @@ public class VMWareInfrastructure extends InfrastructureManager {
     }
 
     @Override
-    public void shutDown() {
-        logger.info("Terminating the infrastructure: " + infrastructureId);
-        synchronized (this) {
-            connectorIaasClient.terminateInfrastructure(infrastructureId);
-            nodesPerInstances.clear();
-        }
-        logger.info("Infrastructure: " + infrastructureId + " terminated");
-    }
-
-    @Override
     public void notifyAcquiredNode(Node node) throws RMException {
 
         String instanceId = getInstanceIdProperty(node);
@@ -321,10 +315,6 @@ public class VMWareInfrastructure extends InfrastructureManager {
     @Override
     public String getDescription() {
         return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
-    }
-
-    public static void main(String[] args) {
-        System.out.println(System.getProperty("os.name"));
     }
 
     /**
