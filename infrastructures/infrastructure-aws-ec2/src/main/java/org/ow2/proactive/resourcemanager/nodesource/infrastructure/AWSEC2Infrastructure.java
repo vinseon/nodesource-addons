@@ -96,7 +96,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
     protected String infrastructureId = null;
 
-    protected ConnectorIaasClient connectorIaasClient = null;
+    protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
 
@@ -125,8 +125,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         this.ram = Integer.parseInt(parameters[9].toString().trim());
         this.cores = Integer.parseInt(parameters[10].toString().trim());
 
-        connectorIaasClient = new ConnectorIaasClient(
-            ConnectorIaasClient.generateRestClient(connectorIaasURL));
+        connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
     }
 
@@ -182,61 +181,27 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
     }
 
-    private void createInfrastructure() {
-
-        infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
-
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
-                INFRASTRUCTURE_TYPE, aws_key, aws_secret_key, true);
-
-        logger.info("Creating infrastructure : " + infrastructureJson);
-
-        connectorIaasClient.createInfrastructure(infrastructureId, infrastructureJson);
-
-        logger.info("Infrastructure created");
-
-    }
-
     @Override
     public void acquireNode() {
 
-        connectorIaasClient.waitForConnectorIaasToBeUP();
+        connectorIaasController.waitForConnectorIaasToBeUP();
 
-        createInfrastructure();
+        String infrastructureId = connectorIaasController.createInfrastructure(nodeSource.getName(), aws_key,
+                aws_secret_key, null, true);
 
-        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(infrastructureId, image,
-                "" + numberOfInstances, "" + cores, "" + ram);
+        String instanceTag = infrastructureId;
 
-        logger.info("InstanceJson : " + instanceJson);
-
-        Set<String> instancesIds = connectorIaasClient.createInstances(infrastructureId, instanceJson);
-
-        logger.info("Instances ids created : " + instancesIds);
+        Set<String> instancesIds = connectorIaasController.createInstances(infrastructureId, instanceTag,
+                image, numberOfInstances, cores, ram);
 
         for (String instanceId : instancesIds) {
+
             List<String> scripts = Lists.newArrayList(this.downloadCommand,
                     "nohup " + generateDefaultStartNodeCommand(instanceId) + "  &");
-            String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts);
 
-            executeScript(instanceId, instanceScriptJson);
+            connectorIaasController.executeScript(infrastructureId, instanceId, scripts);
         }
 
-    }
-
-    private void executeScript(String instanceId, String instanceScriptJson) {
-        String scriptResult = null;
-        try {
-            scriptResult = connectorIaasClient.runScriptOnInstance(infrastructureId, instanceId,
-                    instanceScriptJson);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Executed successfully script for instance id :" + instanceId +
-                    "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
-            } else {
-                logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
-            }
-        } catch (Exception e) {
-            logger.error("Error while executing script :\n" + instanceScriptJson, e);
-        }
     }
 
     @Override
@@ -261,7 +226,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
             logger.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
-                connectorIaasClient.terminateInstance(infrastructureId, instanceId);
+                connectorIaasController.terminateInstance(infrastructureId, instanceId);
                 nodesPerInstances.remove(instanceId);
                 logger.info("Removed instance : " + instanceId);
             }

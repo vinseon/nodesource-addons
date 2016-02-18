@@ -4,13 +4,12 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.List;
-import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,7 +21,6 @@ import org.objectweb.proactive.core.node.NodeInformation;
 import org.objectweb.proactive.core.runtime.ProActiveRuntime;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.NodeSource;
-import org.python.google.common.collect.Lists;
 import org.python.google.common.collect.Sets;
 
 
@@ -31,7 +29,7 @@ public class OpenstackInfrastructureTest {
     private OpenstackInfrastructure openstackInfrastructure;
 
     @Mock
-    private ConnectorIaasClient connectorIaasClient;
+    private ConnectorIaasController connectorIaasController;
     @Mock
     private NodeSource nodeSource;
     @Mock
@@ -96,33 +94,29 @@ public class OpenstackInfrastructureTest {
                 "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
-        when(nodeSource.getName()).thenReturn("node source name");
+        openstackInfrastructure.connectorIaasController = connectorIaasController;
+        when(nodeSource.getName()).thenReturn("node_source_name");
         openstackInfrastructure.nodeSource = nodeSource;
         openstackInfrastructure.rmUrl = "http://test.activeeon.com";
 
-        Set<String> instanceIds = Sets.newHashSet("123", "456");
-        when(connectorIaasClient.createInstances(anyString(), anyString())).thenReturn(instanceIds);
+        when(connectorIaasController.createInfrastructure("node_source_name", "username", "password",
+                "endpoint", false)).thenReturn("node_source_name");
+
+        when(connectorIaasController.createInstancesWithPublicKeyNameAndInitScript(anyString(), anyString(),
+                anyString(), anyInt(), anyInt(), anyString(), anyList()))
+                        .thenReturn(Sets.newHashSet("123", "456"));
 
         openstackInfrastructure.acquireNode();
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
-                "node_source_name", OpenstackInfrastructure.INFRASTRUCTURE_TYPE, "username", "password",
-                "endpoint");
+        verify(connectorIaasController, times(1)).waitForConnectorIaasToBeUP();
 
-        verify(connectorIaasClient, times(1)).waitForConnectorIaasToBeUP();
+        verify(connectorIaasController).createInfrastructure("node_source_name", "username", "password",
+                "endpoint", false);
 
-        verify(connectorIaasClient).createInfrastructure("node_source_name", infrastructureJson);
+        verify(connectorIaasController, times(2)).createInstancesWithPublicKeyNameAndInitScript(anyString(),
+                anyString(), anyString(), anyInt(), anyInt(), anyString(), anyList());
 
-        List<String> scripts = Lists.newArrayList();
-        scripts.add("wget -nv test.activeeon.com/rest/node.jar");
-        scripts.add(
-                "nohup java -jar node.jar -Dproactive.communication.protocol=http -Dproactive.pamr.router.address=test.activeeon.com -DinstanceTag=node_source_name_1 -Dnew=value -r http://test.activeeon.com -s node source name -w 3  &");
-
-        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSONWithPublicKeyAndScripts(
-                "node_source_name_1", "openstack-image", "1", "publicKeyName", "3", scripts);
-
-        verify(connectorIaasClient).createInstances("node_source_name", instanceJson);
+        verify(connectorIaasController, times(0)).executeScript(anyString(), anyString(), anyList());
 
     }
 
@@ -137,7 +131,7 @@ public class OpenstackInfrastructureTest {
                 "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
+        openstackInfrastructure.connectorIaasController = connectorIaasController;
 
         when(nodeSource.getName()).thenReturn("node source name");
         openstackInfrastructure.nodeSource = nodeSource;
@@ -156,7 +150,7 @@ public class OpenstackInfrastructureTest {
 
         verify(proActiveRuntime).killNode("nodename");
 
-        verify(connectorIaasClient).terminateInstance(null, "123");
+        verify(connectorIaasController).terminateInstance(null, "123");
 
         assertThat(openstackInfrastructure.nodesPerInstances.isEmpty(), is(true));
 
@@ -168,7 +162,7 @@ public class OpenstackInfrastructureTest {
                 "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
+        openstackInfrastructure.connectorIaasController = connectorIaasController;
 
         when(node.getProperty(OpenstackInfrastructure.INSTANCE_TAG_NODE_PROPERTY)).thenReturn("123");
 
@@ -188,24 +182,6 @@ public class OpenstackInfrastructureTest {
     public void testGetDescription() {
         assertThat(openstackInfrastructure.getDescription(),
                 is("Handles nodes from the Amazon Elastic Compute Cloud Service."));
-    }
-
-    @Test
-    public void testshutdown() {
-        openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
-                "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
-
-        openstackInfrastructure.connectorIaasClient = connectorIaasClient;
-        openstackInfrastructure.infrastructureId = "nodename";
-
-        openstackInfrastructure.nodesPerInstances.put("123", Sets.newHashSet("nodeurl"));
-
-        openstackInfrastructure.shutDown();
-
-        assertThat(openstackInfrastructure.nodesPerInstances.isEmpty(), is(true));
-
-        verify(connectorIaasClient).terminateInfrastructure("nodename");
     }
 
 }

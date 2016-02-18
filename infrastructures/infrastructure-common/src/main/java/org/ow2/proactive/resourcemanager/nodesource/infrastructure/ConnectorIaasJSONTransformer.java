@@ -19,20 +19,23 @@ public class ConnectorIaasJSONTransformer {
 
     public static String getInfrastructureJSON(String infrastructureId, String type, String username,
             String password, boolean toBeRemovedOnShutdown) {
-        JSONObject credentials = new JSONObject();
-        credentials.put("username", username);
-        credentials.put("password", password);
-        return new JSONObject().put("id", infrastructureId).put("type", type).put("credentials", credentials)
-                .put("toBeRemovedOnShutdown", toBeRemovedOnShutdown).toString();
+        return getInfrastructureJSONWithEndPoint(infrastructureId, type, username, password, null,
+                toBeRemovedOnShutdown);
     }
 
     public static String getInfrastructureJSONWithEndPoint(String infrastructureId, String type,
-            String username, String password, String endpoint) {
+            String username, String password, String endpoint, boolean toBeRemovedOnShutdown) {
         JSONObject credentials = new JSONObject();
         credentials.put("username", username);
         credentials.put("password", password);
-        return new JSONObject().put("id", infrastructureId).put("type", type).put("credentials", credentials)
-                .put("endpoint", endpoint).toString();
+        JSONObject infrastructure = new JSONObject().put("id", infrastructureId).put("type", type)
+                .put("credentials", credentials).put("toBeRemovedOnShutdown", toBeRemovedOnShutdown);
+
+        if (endpoint != null && !endpoint.isEmpty()) {
+            infrastructure = infrastructure.put("endpoint", endpoint);
+        }
+
+        return infrastructure.toString();
     }
 
     public static String getInstanceJSON(String tag, String image, String number, String cpu, String ram) {

@@ -48,10 +48,12 @@ public class ConnectorIaasJSONTransformerTest {
     public void testGetInfrastructureJSONWithEndpoint() {
 
         JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
-                "infrastructureId", "type", "username", "password", "endpoint"));
+                "infrastructureId", "type", "username", "password", "endpoint", true));
 
         assertThat(actual.getString("id"), is("infrastructureId"));
         assertThat(actual.getString("type"), is("type"));
+        assertThat(actual.getString("endpoint"), is("endpoint"));
+        assertThat(actual.getBoolean("toBeRemovedOnShutdown"), is(true));
         assertThat(actual.getJSONObject("credentials").getString("username"), is("username"));
         assertThat(actual.getJSONObject("credentials").getString("password"), is("password"));
     }

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Set;
 
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -49,10 +50,11 @@ public class ConnectorIaasClientTest {
     @Test
     public void testCreateInstances() {
 
-        Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\"}"))
+        Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\",tag=\"instanceTag123\"}"))
                 .thenReturn("[{'id' : 'instance123'}]");
 
-        Set<String> instances = connectorIaasClient.createInstances("infra123", "{id=\"123\"}");
+        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123", "instanceTag123",
+                "{id=\"123\",tag=\"instanceTag123\"}", Sets.<JSONObject> newHashSet());
 
         assertThat(instances.size(), is(1));
 
@@ -63,10 +65,11 @@ public class ConnectorIaasClientTest {
     @Test
     public void testCreateMultipleInstances() {
 
-        Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\"}"))
+        Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\",tag=\"instanceTag123\"}"))
                 .thenReturn("[{'id' : 'instance123'},{'id' : 'instance456'},{'id' : 'instance789'}]");
 
-        Set<String> instances = connectorIaasClient.createInstances("infra123", "{id=\"123\"}");
+        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123", "instanceTag123",
+                "{id=\"123\",tag=\"instanceTag123\"}", Sets.<JSONObject> newHashSet());
 
         assertThat(instances.size(), is(3));
 
