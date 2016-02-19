@@ -67,7 +67,7 @@ public class ConnectorIaasControllerTest {
         when(connectorIaasClient.createInfrastructure("node_source_name", infrastructureJson))
                 .thenReturn("node_source_name");
 
-        String infrastructureId = connectorIaasController.createInfrastructure("Node Source name", "username",
+        String infrastructureId = connectorIaasController.createInfrastructure("node_source_name", "username",
                 "password", "endPoint", true);
 
         assertThat(infrastructureId, is("node_source_name"));

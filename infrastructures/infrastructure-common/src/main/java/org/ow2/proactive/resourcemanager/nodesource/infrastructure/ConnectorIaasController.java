@@ -31,10 +31,8 @@ public class ConnectorIaasController {
         connectorIaasClient.waitForConnectorIaasToBeUP();
     }
 
-    public String createInfrastructure(String nodeSourceName, String username, String password,
+    public String createInfrastructure(String infrastructureId, String username, String password,
             String endPoint, boolean destroyOnShutdown) {
-
-        String infrastructureId = nodeSourceName.trim().replace(" ", "_").toLowerCase();
 
         String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
                 infrastructureType, username, password, destroyOnShutdown);

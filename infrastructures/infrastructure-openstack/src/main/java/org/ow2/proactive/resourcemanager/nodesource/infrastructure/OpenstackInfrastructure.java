@@ -129,6 +129,8 @@ public class OpenstackInfrastructure extends InfrastructureManager {
         this.downloadCommand = parameters[10].toString().trim();
         this.additionalProperties = parameters[11].toString().trim();
 
+        this.infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
+
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
     }
@@ -190,8 +192,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        connectorIaasController.createInfrastructure(nodeSource.getName(), username, password, endpoint,
-                false);
+        connectorIaasController.createInfrastructure(infrastructureId, username, password, endpoint, false);
 
         for (int i = 1; i <= numberOfInstances; i++) {
 
