@@ -63,7 +63,7 @@ public class VMWareInfrastructureTest {
         if (System.getProperty("os.name").contains("Windows")) {
             assertThat(vmwareInfrastructure.downloadCommand,
                     is("powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
-                        vmwareInfrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
+                        vmwareInfrastructure.rmHostname + ":8080/rest/node.jar', 'node.jar') }\""));
         } else {
             assertThat(vmwareInfrastructure.downloadCommand,
                     is("wget -nv http://" + vmwareInfrastructure.rmHostname + ":8080/rest/node.jar"));
