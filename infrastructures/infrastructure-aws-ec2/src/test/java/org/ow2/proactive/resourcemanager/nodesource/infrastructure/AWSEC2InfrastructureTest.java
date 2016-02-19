@@ -58,10 +58,10 @@ public class AWSEC2InfrastructureTest {
         if (System.getProperty("os.name").contains("Windows")) {
             assertThat(awsec2Infrastructure.downloadCommand,
                     is("powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" +
-                        awsec2Infrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
+                        awsec2Infrastructure.rmHostname + ":8080/rest/node.jar', 'node.jar') }\""));
         } else {
             assertThat(awsec2Infrastructure.downloadCommand,
-                    is("wget -nv " + awsec2Infrastructure.rmHostname + "/rest/node.jar"));
+                    is("wget -nv " + awsec2Infrastructure.rmHostname + ":8080/rest/node.jar"));
 
         }
         assertThat(awsec2Infrastructure.additionalProperties, is(""));
