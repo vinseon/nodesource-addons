@@ -16,8 +16,8 @@ public class ConnectorIaasJSONTransformerTest {
     @Test
     public void testGetInfrastructureJSON() {
 
-        JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer
-                .getInfrastructureJSON("infrastructureId", "type", "username", "password"));
+        JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
+                "infrastructureId", "type", "username", "password", null, false));
 
         assertThat(actual.getString("id"), is("infrastructureId"));
         assertThat(actual.getString("type"), is("type"));

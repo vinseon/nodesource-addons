@@ -61,8 +61,8 @@ public class ConnectorIaasControllerTest {
     @Test
     public void testCreateInfrastructure() {
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON("node_source_name",
-                "someType", "username", "password", true);
+        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
+                "node_source_name", "someType", "username", "password", "endPoint", true);
 
         when(connectorIaasClient.createInfrastructure("node_source_name", infrastructureJson))
                 .thenReturn("node_source_name");

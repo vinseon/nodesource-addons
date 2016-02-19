@@ -67,7 +67,7 @@ public class ConnectorIaasClient {
 
     public Set<String> createInstancesIfNotExisist(String infrastructureId, String instanceTag,
             String instanceJson, Set<JSONObject> existingInstances) {
-        Set<String> instancesIds = getExistingInstanceIds(infrastructureId, instanceTag, existingInstances);
+        Set<String> instancesIds = getExistingInstanceIds(instanceTag, existingInstances);
 
         if (instancesIds.isEmpty()) {
             instancesIds = createInstances(infrastructureId, instanceJson);
@@ -76,8 +76,7 @@ public class ConnectorIaasClient {
         return instancesIds;
     }
 
-    private Set<String> getExistingInstanceIds(String infrastructureId, String instanceTag,
-            Set<JSONObject> existingInstances) {
+    private Set<String> getExistingInstanceIds(String instanceTag, Set<JSONObject> existingInstances) {
         Set<String> instancesIds = Sets.newHashSet();
 
         for (JSONObject instance : existingInstances) {
@@ -139,6 +138,7 @@ public class ConnectorIaasClient {
         try {
             Thread.sleep(millisecondsToSleep);
         } catch (InterruptedException e) {
+            logger.warn("Failed to sleep", e);
         }
     }
 
