@@ -166,14 +166,32 @@ public class ConnectorIaasControllerTest {
         List<String> scripts = Lists.newArrayList();
         scripts.add("ls -lrt");
 
-        String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts);
-
-        Set<String> instanceIds = Sets.newHashSet("123", "456");
+        String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSONWithCredentials(scripts,
+                null, null);
 
         when(connectorIaasClient.runScriptOnInstance("node_source_name", "instanceId", instanceScriptJson))
                 .thenReturn("all ok");
 
         connectorIaasController.executeScript("node_source_name", "instanceId", scripts);
+
+        verify(connectorIaasClient).runScriptOnInstance("node_source_name", "instanceId", instanceScriptJson);
+
+    }
+
+    @Test
+    public void testExecuteScriptWithCredentials() {
+
+        List<String> scripts = Lists.newArrayList();
+        scripts.add("ls -lrt");
+
+        String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSONWithCredentials(scripts,
+                "user1", "user2");
+
+        when(connectorIaasClient.runScriptOnInstance("node_source_name", "instanceId", instanceScriptJson))
+                .thenReturn("all ok");
+
+        connectorIaasController.executeScriptWithCredentials("node_source_name", "instanceId", scripts,
+                "user1", "user2");
 
         verify(connectorIaasClient).runScriptOnInstance("node_source_name", "instanceId", instanceScriptJson);
 

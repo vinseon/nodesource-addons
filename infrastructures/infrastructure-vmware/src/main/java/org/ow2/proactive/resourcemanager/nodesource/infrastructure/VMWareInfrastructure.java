@@ -221,8 +221,8 @@ public class VMWareInfrastructure extends InfrastructureManager {
             String fullScript = "-c '" + this.downloadCommand + ";nohup " +
                 generateDefaultStartNodeCommand(instanceId) + "  &'";
 
-            connectorIaasController.executeScript(getInfrastructureId(), instanceId,
-                    Lists.newArrayList(fullScript));
+            connectorIaasController.executeScriptWithCredentials(getInfrastructureId(), instanceId,
+                    Lists.newArrayList(fullScript), vmUsername, vmPassword);
         }
 
     }
