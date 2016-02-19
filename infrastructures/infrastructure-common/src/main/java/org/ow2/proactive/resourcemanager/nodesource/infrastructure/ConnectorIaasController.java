@@ -67,8 +67,15 @@ public class ConnectorIaasController {
     }
 
     public void executeScript(String infrastructureId, String instanceId, List<String> scripts) {
+        executeScriptWithCredentials(infrastructureId, instanceId, scripts, null, null);
 
-        String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts);
+    }
+
+    public void executeScriptWithCredentials(String infrastructureId, String instanceId, List<String> scripts,
+            String username, String password) {
+
+        String instanceScriptJson = ConnectorIaasJSONTransformer.getScriptInstanceJSONWithCredentials(scripts,
+                username, password);
 
         String scriptResult = null;
         try {

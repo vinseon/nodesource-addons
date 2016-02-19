@@ -124,7 +124,8 @@ public class VMWareInfrastructureTest {
         verify(connectorIaasController).createInstances("node_source_name", "node_source_name",
                 "vmware-image", 1, 1, 512);
 
-        verify(connectorIaasController, times(2)).executeScript(anyString(), anyString(), anyList());
+        verify(connectorIaasController, times(2)).executeScriptWithCredentials(anyString(), anyString(),
+                anyList(), anyString(), anyString());
     }
 
     @Test

@@ -40,7 +40,7 @@ public class ConnectorIaasJSONTransformerTest {
     @Test
     public void testGetScriptInstanceJSON() {
         List<String> scripts = Lists.newArrayList("ls", "wget url");
-        assertThat(ConnectorIaasJSONTransformer.getScriptInstanceJSON(scripts),
+        assertThat(ConnectorIaasJSONTransformer.getScriptInstanceJSONWithCredentials(scripts, null, null),
                 is("{\"scripts\":[\"ls\",\"wget url\"]}"));
     }
 

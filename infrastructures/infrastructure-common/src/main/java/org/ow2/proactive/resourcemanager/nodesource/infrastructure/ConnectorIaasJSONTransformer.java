@@ -47,17 +47,16 @@ public class ConnectorIaasJSONTransformer {
                 .toString();
     }
 
-    public static String getScriptInstanceJSON(List<String> scripts) {
-        return new JSONObject().put("scripts", new JSONArray(scripts)).toString();
-    }
-
-    public static String getScriptInstanceJSONWithCredentials(List<String> scripts, String vmUsername,
-            String vmPassword) {
-        JSONObject credentials = new JSONObject();
-        credentials.put("username", vmUsername);
-        credentials.put("password", vmPassword);
-        return new JSONObject().put("credentials", credentials).put("scripts", new JSONArray(scripts))
-                .toString();
+    public static String getScriptInstanceJSONWithCredentials(List<String> scripts, String username,
+            String password) {
+        JSONObject scriptObject = new JSONObject().put("scripts", new JSONArray(scripts));
+        if (username != null && password != null) {
+            JSONObject credentials = new JSONObject();
+            credentials.put("username", username);
+            credentials.put("password", password);
+            scriptObject = scriptObject.put("credentials", credentials);
+        }
+        return scriptObject.toString();
     }
 
 }

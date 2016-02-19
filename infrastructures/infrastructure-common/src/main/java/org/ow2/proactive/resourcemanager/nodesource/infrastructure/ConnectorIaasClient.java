@@ -14,7 +14,7 @@ public class ConnectorIaasClient {
 
     private static final Logger logger = Logger.getLogger(ConnectorIaasClient.class);
 
-    private static final int MAX_RETRIES_IN_CASE_OF_ERROR = 50;
+    private static final int MAX_RETRIES_IN_CASE_OF_ERROR = 10;
     private static final int SLEEP_TIME_RETRIES_IN_CASE_OF_ERROR = 5000;
 
     private final RestClient restClient;
