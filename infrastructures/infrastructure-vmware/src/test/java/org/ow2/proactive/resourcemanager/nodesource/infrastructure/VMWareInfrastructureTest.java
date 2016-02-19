@@ -75,6 +75,9 @@ public class VMWareInfrastructureTest {
 
     @Test
     public void testConfigure() {
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        vmwareInfrastructure.nodeSource = nodeSource;
+
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
                 "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
@@ -82,6 +85,9 @@ public class VMWareInfrastructureTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void tesConfigureNotEnoughParameters() {
+
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        vmwareInfrastructure.nodeSource = nodeSource;
 
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "publicKeyName", "2", "3",
@@ -91,13 +97,15 @@ public class VMWareInfrastructureTest {
     @Test
     public void testAcquireNode() {
 
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        vmwareInfrastructure.nodeSource = nodeSource;
+
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "512", "1", "vmUsername",
                 "vmPassword", "1", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
         vmwareInfrastructure.connectorIaasController = connectorIaasController;
-        when(nodeSource.getName()).thenReturn("node_source_name");
-        vmwareInfrastructure.nodeSource = nodeSource;
+
         vmwareInfrastructure.rmUrl = "http://test.activeeon.com";
 
         when(connectorIaasController.createInfrastructure("node_source_name", "username", "password",
@@ -126,14 +134,14 @@ public class VMWareInfrastructureTest {
 
     @Test
     public void testRemoveNode() throws ProActiveException, RMException {
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        vmwareInfrastructure.nodeSource = nodeSource;
+
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
                 "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
         vmwareInfrastructure.connectorIaasController = connectorIaasController;
-
-        when(nodeSource.getName()).thenReturn("node source name");
-        vmwareInfrastructure.nodeSource = nodeSource;
 
         when(node.getProperty(VMWareInfrastructure.INSTANCE_ID_NODE_PROPERTY)).thenReturn("123");
 
@@ -149,7 +157,7 @@ public class VMWareInfrastructureTest {
 
         verify(proActiveRuntime).killNode("nodename");
 
-        verify(connectorIaasController).terminateInstance(null, "123");
+        verify(connectorIaasController).terminateInstance("node_source_name", "123");
 
         assertThat(vmwareInfrastructure.nodesPerInstances.isEmpty(), is(true));
 
@@ -157,6 +165,9 @@ public class VMWareInfrastructureTest {
 
     @Test
     public void testNotifyAcquiredNode() throws ProActiveException, RMException {
+
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        vmwareInfrastructure.nodeSource = nodeSource;
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
                 "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");

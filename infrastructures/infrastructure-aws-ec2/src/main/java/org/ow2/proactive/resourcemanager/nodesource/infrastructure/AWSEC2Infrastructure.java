@@ -125,6 +125,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         this.ram = Integer.parseInt(parameters[9].toString().trim());
         this.cores = Integer.parseInt(parameters[10].toString().trim());
 
+        this.infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
+
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
     }
@@ -186,8 +188,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        String infrastructureId = connectorIaasController.createInfrastructure(nodeSource.getName(), aws_key,
-                aws_secret_key, null, true);
+        connectorIaasController.createInfrastructure(infrastructureId, aws_key, aws_secret_key, null, true);
 
         String instanceTag = infrastructureId;
 

@@ -43,6 +43,8 @@ public class AWSEC2InfrastructureTest {
         MockitoAnnotations.initMocks(this);
         awsec2Infrastructure = new AWSEC2Infrastructure();
 
+        awsec2Infrastructure.nodeSource = nodeSource;
+
     }
 
     @Test
@@ -72,6 +74,8 @@ public class AWSEC2InfrastructureTest {
     @Test
     public void testConfigure() {
 
+        when(nodeSource.getName()).thenReturn("Node source Name");
+
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
@@ -79,6 +83,8 @@ public class AWSEC2InfrastructureTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void tesConfigureNotEnoughParameters() {
+
+        when(nodeSource.getName()).thenReturn("Node source Name");
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image",
@@ -88,12 +94,13 @@ public class AWSEC2InfrastructureTest {
     @Test
     public void testAcquireNode() {
 
+        when(nodeSource.getName()).thenReturn("Node source Name");
+
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
         awsec2Infrastructure.connectorIaasController = connectorIaasController;
-        when(nodeSource.getName()).thenReturn("node_source_name");
         awsec2Infrastructure.nodeSource = nodeSource;
         awsec2Infrastructure.rmUrl = "http://test.activeeon.com";
 
@@ -124,14 +131,14 @@ public class AWSEC2InfrastructureTest {
 
     @Test
     public void testRemoveNode() throws ProActiveException, RMException {
+
+        when(nodeSource.getName()).thenReturn("Node source Name");
+
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
 
         awsec2Infrastructure.connectorIaasController = connectorIaasController;
-
-        when(nodeSource.getName()).thenReturn("node source name");
-        awsec2Infrastructure.nodeSource = nodeSource;
 
         when(node.getProperty(AWSEC2Infrastructure.INSTANCE_ID_NODE_PROPERTY)).thenReturn("123");
 
@@ -147,7 +154,7 @@ public class AWSEC2InfrastructureTest {
 
         verify(proActiveRuntime).killNode("nodename");
 
-        verify(connectorIaasController).terminateInstance(null, "123");
+        verify(connectorIaasController).terminateInstance("node_source_name", "123");
 
         assertThat(awsec2Infrastructure.nodesPerInstances.isEmpty(), is(true));
 
@@ -155,6 +162,9 @@ public class AWSEC2InfrastructureTest {
 
     @Test
     public void testNotifyAcquiredNode() throws ProActiveException, RMException {
+
+        when(nodeSource.getName()).thenReturn("Node source Name");
+
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);

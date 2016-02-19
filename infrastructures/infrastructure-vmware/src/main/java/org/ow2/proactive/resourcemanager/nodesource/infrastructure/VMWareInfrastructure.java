@@ -136,6 +136,8 @@ public class VMWareInfrastructure extends InfrastructureManager {
         this.downloadCommand = parameters[12].toString().trim();
         this.additionalProperties = parameters[13].toString().trim();
 
+        this.infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
+
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
     }
@@ -208,8 +210,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        String infrastructureId = connectorIaasController.createInfrastructure(nodeSource.getName(), username,
-                password, endpoint, false);
+        connectorIaasController.createInfrastructure(infrastructureId, username, password, endpoint, false);
 
         String instanceTag = infrastructureId;
 

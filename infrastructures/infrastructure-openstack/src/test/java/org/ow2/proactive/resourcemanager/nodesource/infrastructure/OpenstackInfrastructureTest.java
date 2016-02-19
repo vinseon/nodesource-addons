@@ -74,6 +74,9 @@ public class OpenstackInfrastructureTest {
 
     @Test
     public void testConfigure() {
+
+        when(nodeSource.getName()).thenReturn("node source name");
+        openstackInfrastructure.nodeSource = nodeSource;
         openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
@@ -81,6 +84,9 @@ public class OpenstackInfrastructureTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void tesConfigureNotEnoughParameters() {
+
+        when(nodeSource.getName()).thenReturn("node source name");
+        openstackInfrastructure.nodeSource = nodeSource;
 
         openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "publicKeyName", "2", "3",
@@ -90,13 +96,15 @@ public class OpenstackInfrastructureTest {
     @Test
     public void testAcquireNode() {
 
+        when(nodeSource.getName()).thenReturn("node source name");
+        openstackInfrastructure.nodeSource = nodeSource;
+
         openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
         openstackInfrastructure.connectorIaasController = connectorIaasController;
-        when(nodeSource.getName()).thenReturn("node_source_name");
-        openstackInfrastructure.nodeSource = nodeSource;
+
         openstackInfrastructure.rmUrl = "http://test.activeeon.com";
 
         when(connectorIaasController.createInfrastructure("node_source_name", "username", "password",
@@ -127,14 +135,15 @@ public class OpenstackInfrastructureTest {
 
     @Test
     public void testRemoveNode() throws ProActiveException, RMException {
+
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        openstackInfrastructure.nodeSource = nodeSource;
+
         openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
 
         openstackInfrastructure.connectorIaasController = connectorIaasController;
-
-        when(nodeSource.getName()).thenReturn("node source name");
-        openstackInfrastructure.nodeSource = nodeSource;
 
         when(node.getProperty(OpenstackInfrastructure.INSTANCE_TAG_NODE_PROPERTY)).thenReturn("123");
 
@@ -150,7 +159,7 @@ public class OpenstackInfrastructureTest {
 
         verify(proActiveRuntime).killNode("nodename");
 
-        verify(connectorIaasController).terminateInstance(null, "123");
+        verify(connectorIaasController).terminateInstance("node_source_name", "123");
 
         assertThat(openstackInfrastructure.nodesPerInstances.isEmpty(), is(true));
 
@@ -158,6 +167,9 @@ public class OpenstackInfrastructureTest {
 
     @Test
     public void testNotifyAcquiredNode() throws ProActiveException, RMException {
+
+        when(nodeSource.getName()).thenReturn("node source name");
+        openstackInfrastructure.nodeSource = nodeSource;
         openstackInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "openstack-image", "3", "publicKeyName", "2", "3",
                 "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
