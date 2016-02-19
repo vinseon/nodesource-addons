@@ -52,7 +52,7 @@ public class ConnectorIaasController {
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image,
                 "" + numberOfInstances, "" + cores, "" + ram);
 
-        return createInstance(infrastructureId, instanceJson);
+        return createInstance(infrastructureId, instanceTag, instanceJson);
     }
 
     public Set<String> createInstancesWithPublicKeyNameAndInitScript(String infrastructureId,
@@ -63,7 +63,7 @@ public class ConnectorIaasController {
                 image, String.valueOf(numberOfInstances), publicKeyName, String.valueOf(hardwareType),
                 scripts);
 
-        return createInstance(infrastructureId, instanceJson);
+        return createInstance(infrastructureId, instanceTag, instanceJson);
     }
 
     public void executeScript(String infrastructureId, String instanceId, List<String> scripts) {
@@ -89,7 +89,7 @@ public class ConnectorIaasController {
         connectorIaasClient.terminateInstance(infrastructureId, instanceId);
     }
 
-    private Set<String> createInstance(String infrastructureId, String instanceJson) {
+    private Set<String> createInstance(String infrastructureId, String instanceTag, String instanceJson) {
         Set<JSONObject> existingInstancesByInfrastructureId = connectorIaasClient
                 .getAllJsonInstancesByInfrastructureId(infrastructureId);
 
@@ -99,7 +99,7 @@ public class ConnectorIaasController {
         logger.info("InstanceJson : " + instanceJson);
 
         Set<String> instancesIds = connectorIaasClient.createInstancesIfNotExisist(infrastructureId,
-                infrastructureId, instanceJson, existingInstancesByInfrastructureId);
+                instanceTag, instanceJson, existingInstancesByInfrastructureId);
 
         logger.info("Instances ids created : " + instancesIds);
 

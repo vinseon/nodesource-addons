@@ -62,10 +62,10 @@ public class OpenstackInfrastructureTest {
         if (System.getProperty("os.name").contains("Windows")) {
             assertThat(openstackInfrastructure.downloadCommand,
                     is("powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" +
-                        openstackInfrastructure.rmHostname + "/rest/node.jar', 'node.jar') }\""));
+                        openstackInfrastructure.rmHostname + ":8080/rest/node.jar', 'node.jar') }\""));
         } else {
             assertThat(openstackInfrastructure.downloadCommand,
-                    is("wget -nv " + openstackInfrastructure.rmHostname + "/rest/node.jar"));
+                    is("wget -nv " + openstackInfrastructure.rmHostname + ":8080/rest/node.jar"));
 
         }
         assertThat(openstackInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
@@ -119,7 +119,7 @@ public class OpenstackInfrastructureTest {
         verify(connectorIaasController, times(1)).waitForConnectorIaasToBeUP();
 
         verify(connectorIaasController).createInfrastructure("node_source_name", "username", "password",
-                "endpoint", false);
+                "endpoint", true);
 
         verify(connectorIaasController, times(2)).createInstancesWithPublicKeyNameAndInitScript(anyString(),
                 anyString(), anyString(), anyInt(), anyInt(), anyString(), anyList());

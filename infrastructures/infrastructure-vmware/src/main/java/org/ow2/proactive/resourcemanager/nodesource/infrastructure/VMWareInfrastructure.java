@@ -295,7 +295,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
             return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
-                this.rmHostname + "/rest/node.jar" + "', 'node.jar') }\"";
+                this.rmHostname + ":8080/rest/node.jar" + "', 'node.jar') }\"";
         } else {
             return "wget -nv http://" + this.rmHostname + ":8080/rest/node.jar";
         }

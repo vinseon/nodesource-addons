@@ -189,7 +189,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
         connectorIaasController.waitForConnectorIaasToBeUP();
 
         connectorIaasController.createInfrastructure(getInfrastructureId(), username, password, endpoint,
-                false);
+                true);
 
         for (int i = 1; i <= numberOfInstances; i++) {
 
@@ -272,9 +272,9 @@ public class OpenstackInfrastructure extends InfrastructureManager {
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
             return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmHostname +
-                "/rest/node.jar" + "', 'node.jar') }\"";
+                ":8080/rest/node.jar" + "', 'node.jar') }\"";
         } else {
-            return "wget -nv " + this.rmHostname + "/rest/node.jar";
+            return "wget -nv " + this.rmHostname + ":8080/rest/node.jar";
         }
     }
 
