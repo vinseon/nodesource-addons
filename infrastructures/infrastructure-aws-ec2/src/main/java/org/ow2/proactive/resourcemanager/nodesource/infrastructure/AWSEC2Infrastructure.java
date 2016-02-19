@@ -94,8 +94,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     @Configurable(description = "minimum number of CPU cores required")
     protected int cores = 1;
 
-    protected String infrastructureId = null;
-
     protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
@@ -124,8 +122,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         this.additionalProperties = parameters[8].toString().trim();
         this.ram = Integer.parseInt(parameters[9].toString().trim());
         this.cores = Integer.parseInt(parameters[10].toString().trim());
-
-        this.infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
@@ -188,11 +184,12 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        connectorIaasController.createInfrastructure(infrastructureId, aws_key, aws_secret_key, null, true);
+        connectorIaasController.createInfrastructure(getInfrastructureId(), aws_key, aws_secret_key, null,
+                true);
 
-        String instanceTag = infrastructureId;
+        String instanceTag = getInfrastructureId();
 
-        Set<String> instancesIds = connectorIaasController.createInstances(infrastructureId, instanceTag,
+        Set<String> instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag,
                 image, numberOfInstances, cores, ram);
 
         for (String instanceId : instancesIds) {
@@ -200,7 +197,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
             List<String> scripts = Lists.newArrayList(this.downloadCommand,
                     "nohup " + generateDefaultStartNodeCommand(instanceId) + "  &");
 
-            connectorIaasController.executeScript(infrastructureId, instanceId, scripts);
+            connectorIaasController.executeScript(getInfrastructureId(), instanceId, scripts);
         }
 
     }
@@ -227,7 +224,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
             logger.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
-                connectorIaasController.terminateInstance(infrastructureId, instanceId);
+                connectorIaasController.terminateInstance(getInfrastructureId(), instanceId);
                 nodesPerInstances.remove(instanceId);
                 logger.info("Removed instance : " + instanceId);
             }
@@ -302,6 +299,10 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         } catch (ProActiveException e) {
             throw new RMException(e);
         }
+    }
+
+    private String getInfrastructureId() {
+        return nodeSource.getName().trim().replace(" ", "_").toLowerCase();
     }
 
 }
