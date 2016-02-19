@@ -97,8 +97,6 @@ public class OpenstackInfrastructure extends InfrastructureManager {
     @Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
     protected String additionalProperties = "-Dproactive.useIPaddress=true";
 
-    protected String infrastructureId = null;
-
     protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
@@ -128,8 +126,6 @@ public class OpenstackInfrastructure extends InfrastructureManager {
         this.numberOfNodesPerInstance = Integer.parseInt(parameters[9].toString().trim());
         this.downloadCommand = parameters[10].toString().trim();
         this.additionalProperties = parameters[11].toString().trim();
-
-        this.infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
@@ -192,16 +188,17 @@ public class OpenstackInfrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        connectorIaasController.createInfrastructure(infrastructureId, username, password, endpoint, false);
+        connectorIaasController.createInfrastructure(getInfrastructureId(), username, password, endpoint,
+                false);
 
         for (int i = 1; i <= numberOfInstances; i++) {
 
-            String instanceTag = infrastructureId + "_" + i;
+            String instanceTag = getInfrastructureId() + "_" + i;
 
             List<String> scripts = Lists.newArrayList(this.downloadCommand,
                     "nohup " + generateDefaultStartNodeCommand(instanceTag) + "  &");
 
-            connectorIaasController.createInstancesWithPublicKeyNameAndInitScript(infrastructureId,
+            connectorIaasController.createInstancesWithPublicKeyNameAndInitScript(getInfrastructureId(),
                     instanceTag, image, 1, flavor, publicKeyName, scripts);
         }
 
@@ -229,7 +226,7 @@ public class OpenstackInfrastructure extends InfrastructureManager {
             logger.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
-                connectorIaasController.terminateInstance(infrastructureId, instanceId);
+                connectorIaasController.terminateInstance(getInfrastructureId(), instanceId);
                 nodesPerInstances.remove(instanceId);
                 logger.info("Removed instance : " + instanceId);
             }
@@ -304,6 +301,10 @@ public class OpenstackInfrastructure extends InfrastructureManager {
         } catch (ProActiveException e) {
             throw new RMException(e);
         }
+    }
+
+    private String getInfrastructureId() {
+        return nodeSource.getName().trim().replace(" ", "_").toLowerCase();
     }
 
 }

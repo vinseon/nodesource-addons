@@ -43,8 +43,6 @@ public class AWSEC2InfrastructureTest {
         MockitoAnnotations.initMocks(this);
         awsec2Infrastructure = new AWSEC2Infrastructure();
 
-        awsec2Infrastructure.nodeSource = nodeSource;
-
     }
 
     @Test
@@ -75,6 +73,7 @@ public class AWSEC2InfrastructureTest {
     public void testConfigure() {
 
         when(nodeSource.getName()).thenReturn("Node source Name");
+        awsec2Infrastructure.nodeSource = nodeSource;
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
@@ -85,6 +84,7 @@ public class AWSEC2InfrastructureTest {
     public void tesConfigureNotEnoughParameters() {
 
         when(nodeSource.getName()).thenReturn("Node source Name");
+        awsec2Infrastructure.nodeSource = nodeSource;
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image",
@@ -95,6 +95,7 @@ public class AWSEC2InfrastructureTest {
     public void testAcquireNode() {
 
         when(nodeSource.getName()).thenReturn("Node source Name");
+        awsec2Infrastructure.nodeSource = nodeSource;
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
@@ -133,6 +134,7 @@ public class AWSEC2InfrastructureTest {
     public void testRemoveNode() throws ProActiveException, RMException {
 
         when(nodeSource.getName()).thenReturn("Node source Name");
+        awsec2Infrastructure.nodeSource = nodeSource;
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
@@ -164,6 +166,7 @@ public class AWSEC2InfrastructureTest {
     public void testNotifyAcquiredNode() throws ProActiveException, RMException {
 
         when(nodeSource.getName()).thenReturn("Node source Name");
+        awsec2Infrastructure.nodeSource = nodeSource;
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",

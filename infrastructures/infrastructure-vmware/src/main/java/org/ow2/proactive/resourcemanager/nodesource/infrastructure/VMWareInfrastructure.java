@@ -102,8 +102,6 @@ public class VMWareInfrastructure extends InfrastructureManager {
     @Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
     protected String additionalProperties = "-Dproactive.useIPaddress=true";
 
-    protected String infrastructureId = null;
-
     protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
@@ -135,8 +133,6 @@ public class VMWareInfrastructure extends InfrastructureManager {
         this.numberOfNodesPerInstance = Integer.parseInt(parameters[11].toString().trim());
         this.downloadCommand = parameters[12].toString().trim();
         this.additionalProperties = parameters[13].toString().trim();
-
-        this.infrastructureId = nodeSource.getName().trim().replace(" ", "_").toLowerCase();
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
@@ -210,11 +206,12 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        connectorIaasController.createInfrastructure(infrastructureId, username, password, endpoint, false);
+        connectorIaasController.createInfrastructure(getInfrastructureId(), username, password, endpoint,
+                false);
 
-        String instanceTag = infrastructureId;
+        String instanceTag = getInfrastructureId();
 
-        Set<String> instancesIds = connectorIaasController.createInstances(infrastructureId, instanceTag,
+        Set<String> instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag,
                 image, numberOfInstances, cores, ram);
 
         logger.info("Instances ids created : " + instancesIds);
@@ -224,7 +221,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
             String fullScript = "-c '" + this.downloadCommand + ";nohup " +
                 generateDefaultStartNodeCommand(instanceId) + "  &'";
 
-            connectorIaasController.executeScript(infrastructureId, instanceId,
+            connectorIaasController.executeScript(getInfrastructureId(), instanceId,
                     Lists.newArrayList(fullScript));
         }
 
@@ -252,7 +249,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
             logger.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
-                connectorIaasController.terminateInstance(infrastructureId, instanceId);
+                connectorIaasController.terminateInstance(getInfrastructureId(), instanceId);
                 nodesPerInstances.remove(instanceId);
                 logger.info("Removed instance : " + instanceId);
             }
@@ -327,6 +324,10 @@ public class VMWareInfrastructure extends InfrastructureManager {
         } catch (ProActiveException e) {
             throw new RMException(e);
         }
+    }
+
+    private String getInfrastructureId() {
+        return nodeSource.getName().trim().replace(" ", "_").toLowerCase();
     }
 
 }
