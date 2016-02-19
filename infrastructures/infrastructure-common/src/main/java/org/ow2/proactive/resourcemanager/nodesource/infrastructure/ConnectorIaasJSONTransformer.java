@@ -11,18 +11,6 @@ public class ConnectorIaasJSONTransformer {
     private ConnectorIaasJSONTransformer() {
     }
 
-    public static String getInfrastructureJSON(String infrastructureId, String type, String username,
-            String password) {
-
-        return getInfrastructureJSON(infrastructureId, type, username, password, false);
-    }
-
-    public static String getInfrastructureJSON(String infrastructureId, String type, String username,
-            String password, boolean toBeRemovedOnShutdown) {
-        return getInfrastructureJSONWithEndPoint(infrastructureId, type, username, password, null,
-                toBeRemovedOnShutdown);
-    }
-
     public static String getInfrastructureJSONWithEndPoint(String infrastructureId, String type,
             String username, String password, String endpoint, boolean toBeRemovedOnShutdown) {
         JSONObject credentials = new JSONObject();

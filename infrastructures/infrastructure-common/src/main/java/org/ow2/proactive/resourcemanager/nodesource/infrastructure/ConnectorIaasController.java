@@ -34,8 +34,8 @@ public class ConnectorIaasController {
     public String createInfrastructure(String infrastructureId, String username, String password,
             String endPoint, boolean destroyOnShutdown) {
 
-        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSON(infrastructureId,
-                infrastructureType, username, password, destroyOnShutdown);
+        String infrastructureJson = ConnectorIaasJSONTransformer.getInfrastructureJSONWithEndPoint(
+                infrastructureId, infrastructureType, username, password, endPoint, destroyOnShutdown);
 
         logger.info("Creating infrastructure : " + infrastructureJson);
 
@@ -60,7 +60,8 @@ public class ConnectorIaasController {
             List<String> scripts) {
 
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSONWithPublicKeyAndScripts(instanceTag,
-                image, "1", publicKeyName, String.valueOf(hardwareType), scripts);
+                image, String.valueOf(numberOfInstances), publicKeyName, String.valueOf(hardwareType),
+                scripts);
 
         return createInstance(infrastructureId, instanceJson);
     }
