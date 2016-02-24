@@ -39,7 +39,6 @@ package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 import java.io.File;
 import java.io.IOException;
 import java.security.KeyException;
-import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -58,6 +57,7 @@ import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
 import org.ow2.proactive.resourcemanager.utils.CommandLineBuilder;
 import org.ow2.proactive.resourcemanager.utils.OperatingSystem;
 import org.ow2.proactive.utils.FileToBytesConverter;
+import org.python.google.common.collect.Maps;
 
 
 public class WinHPCInfrastructure extends DefaultInfrastructureManager {
@@ -105,7 +105,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      * Path to the credentials file user for RM authentication
      */
     @Configurable(credential = true, description = "Absolute path of the credential file")
-    protected File RMCredentialsPath;
+    protected File rmCredentialsPath;
 
     /**
      * Additional java options to append to the command executed on the remote
@@ -127,11 +127,11 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     /** the path of the trust store which holds hpc server's certificate */
     private String trustStorePath;
     /** the list of submitted jobs */
-    private Map<String, EndpointReferenceType[]> submittedJobs = new Hashtable<>();
+    private Map<String, EndpointReferenceType[]> submittedJobs = Maps.newHashMap();
     /** ensures that the deploying node's timeout is not finished */
-    private Map<String, Boolean> dnTimeout = new Hashtable<>();
+    private Map<String, Boolean> dnTimeout = Maps.newHashMap();
     /** to retrieve job's data from deploying node's url */
-    private Map<String, EndpointReferenceType[]> deployingNodeToEndpoint = new Hashtable<>();
+    private Map<String, EndpointReferenceType[]> deployingNodeToEndpoint = Maps.newHashMap();
     /** the deployer instance */
     private transient org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer deployer;
     /** the refresh rate of the job's state in ms */
@@ -172,6 +172,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
     /** async node acquisition implementation */
     private void acquireNodeImpl() {
         nodeSource.executeInParallel(new Runnable() {
+            @Override
             public void run() {
                 try {
                     startNode();
@@ -236,15 +237,11 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         Throwable thresholdCause = null;
         Boolean hasTimeouted = false;
         do {
+
             try {
                 Thread.sleep(WinHPCInfrastructure.JOB_STATE_REFRESH_RATE);
-            } catch (InterruptedException e) {
-                threshold--;
-                thresholdCause = e;
-            }
-            try {
                 status = this.getDeployer().getActivityStatuses(eprs);
-            } catch (RMException rmex) {
+            } catch (Exception rmex) {
                 threshold--;
                 thresholdCause = rmex;
             }
@@ -359,7 +356,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         try {
             command = clb.buildCommandLine(false);
         } catch (Exception ex) {
-            command = "Cannot determine the command used to start the node.";
+            command = "Cannot determine the command used to start the node : " + ex.getMessage();
         }
         String lostNode = super.addDeployingNode(clb.getNodeName(), command,
                 "Cannot deploy the node because of an error:" + System.lineSeparator() + error, 60000);
@@ -387,12 +384,13 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         this.serviceUrl = parameters[1].toString();
         this.userName = parameters[2].toString();
         this.password = parameters[3].toString();
+        this.trustStore = parameters[4].toString();
 
         try {
             String dir = System.getProperty("java.io.tmpdir");
-            File file = new File(dir, "castore");// + randomString());
+            File file = new File(dir, "castore");
             logger.info("Saving trust store file to " + file.getAbsolutePath());
-            FileToBytesConverter.convertByteArrayToFile((byte[]) parameters[4], file);
+            FileToBytesConverter.convertByteArrayToFile(trustStore.getBytes(), file);
             this.trustStorePath = file.getAbsolutePath();
         } catch (Exception e) {
             throw new IllegalArgumentException("Cannot save trust store file", e);
@@ -432,7 +430,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
             try {
                 this.getDeployer().terminateActivity(ert);
             } catch (Exception e) {
-                logger.warn("Cannot remove file " + trustStorePath);
+                logger.warn("Cannot remove file " + trustStorePath, e);
             }
         }
     }
@@ -452,6 +450,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         }
         final Node n = node;
         this.nodeSource.executeInParallel(new Runnable() {
+            @Override
             public void run() {
                 try {
                     n.getProActiveRuntime().killRT(false);

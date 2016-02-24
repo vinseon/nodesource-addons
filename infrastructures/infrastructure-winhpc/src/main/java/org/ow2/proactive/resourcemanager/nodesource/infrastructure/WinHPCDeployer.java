@@ -36,8 +36,6 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import java.rmi.RemoteException;
-
 import org.apache.axis2.context.ConfigurationContext;
 import org.apache.axis2.context.ConfigurationContextFactory;
 import org.apache.log4j.Logger;
@@ -60,10 +58,6 @@ import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.TerminateActiv
 import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.TerminateActivitiesResponse;
 import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.TerminateActivitiesType;
 import org.ggf.schemas.bes._2006._08.bes_factory.HPCBPServiceStub.TerminateActivityResponseType;
-import org.ggf.schemas.bes._2006._08.bes_factory.InvalidRequestMessageFaultException4;
-import org.ggf.schemas.bes._2006._08.bes_factory.NotAcceptingNewActivitiesFaultException3;
-import org.ggf.schemas.bes._2006._08.bes_factory.NotAuthorizedFaultException1;
-import org.ggf.schemas.bes._2006._08.bes_factory.UnsupportedFeatureFaultException5;
 import org.ogf.hpcbp.Client;
 
 
@@ -85,8 +79,8 @@ public class WinHPCDeployer {
         // Creates the proxy to the HPCBP service
         String confFile = axisRep + System.getProperty("file.separator") + "conf" +
             System.getProperty("file.separator") + "axis2.xml";
-        ConfigurationContext config = ConfigurationContextFactory.createConfigurationContextFromFileSystem(
-                axisRep, confFile);
+        ConfigurationContext config = ConfigurationContextFactory
+                .createConfigurationContextFromFileSystem(axisRep, confFile);
         proxy = new HPCBPServiceStub(config, serviceURL);
         Client.WSSUsername = username;
         Client.WSSPassword = password;
@@ -114,16 +108,11 @@ public class WinHPCDeployer {
         return jobDefinition;
     }
 
-    public EndpointReferenceType createActivity(JobDefinition_Type jobDefinitionType) throws RemoteException,
-            NotAcceptingNewActivitiesFaultException3, InvalidRequestMessageFaultException4,
-            UnsupportedFeatureFaultException5, NotAuthorizedFaultException1 {
+    public EndpointReferenceType createActivity(JobDefinition_Type jobDefinitionType) {
         return sendCreateActivityMessage(jobDefinitionType);
     }
 
-    private EndpointReferenceType sendCreateActivityMessage(JobDefinition_Type jobDefinitionType)
-            throws RemoteException, NotAcceptingNewActivitiesFaultException3,
-            InvalidRequestMessageFaultException4, UnsupportedFeatureFaultException5,
-            NotAuthorizedFaultException1 {
+    private EndpointReferenceType sendCreateActivityMessage(JobDefinition_Type jobDefinitionType) {
 
         ActivityDocumentType activityDocumentType = new ActivityDocumentType();
         activityDocumentType.setJobDefinition(jobDefinitionType);
@@ -131,8 +120,12 @@ public class WinHPCDeployer {
         createActivityType.setActivityDocument(activityDocumentType);
         CreateActivity activity = new CreateActivity();
         activity.setCreateActivity(createActivityType);
-        CreateActivityResponse response = proxy.CreateActivity(activity);
-        return response.getCreateActivityResponse().getActivityIdentifier();
+        try {
+            CreateActivityResponse response = proxy.CreateActivity(activity);
+            return response.getCreateActivityResponse().getActivityIdentifier();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -149,7 +142,7 @@ public class WinHPCDeployer {
             return response.getGetActivityStatusesResponse().getResponse();
         } catch (Exception ex) {
             logger.warn(ex.getMessage(), ex);
-            return null;
+            return new GetActivityStatusResponseType[0];
         }
     }
 
@@ -166,7 +159,7 @@ public class WinHPCDeployer {
             return response.getTerminateActivitiesResponse().getResponse();
         } catch (Exception ex) {
             logger.warn(ex.getMessage(), ex);
-            return null;
+            return new TerminateActivityResponseType[0];
         }
     }
 
