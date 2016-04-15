@@ -16,7 +16,7 @@ buildscript {
 
     dependencies {
         classpath 'com.qmino:miredot-plugin:1.6.2'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.2'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.2.3'
     }
 }
 
