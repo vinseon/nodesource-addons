@@ -58,6 +58,7 @@ import org.ow2.proactive.resourcemanager.utils.CommandLineBuilder;
 import org.ow2.proactive.resourcemanager.utils.OperatingSystem;
 import org.ow2.proactive.utils.FileToBytesConverter;
 import org.python.google.common.collect.Maps;
+import com.google.common.base.Throwables;
 
 
 public class WinHPCInfrastructure extends DefaultInfrastructureManager {
@@ -332,7 +333,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      */
     private void handleFailedDeployment(String dNode, CommandLineBuilder clb, Throwable e)
             throws RMException {
-        String error = Utils.getStacktrace(e);
+        String error = Throwables.getStackTraceAsString(e);
         super.declareDeployingNodeLost(dNode,
                 "The deployment failed because of an error: " + System.lineSeparator() + error);
         String nodeName = clb.getNodeName();
@@ -351,7 +352,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      * @throws RMException
      */
     private void handleFailedDeployment(CommandLineBuilder clb, Throwable e) throws RMException {
-        String error = Utils.getStacktrace(e);
+        String error = Throwables.getStackTraceAsString(e);
         String command = null;
         try {
             command = clb.buildCommandLine(false);
