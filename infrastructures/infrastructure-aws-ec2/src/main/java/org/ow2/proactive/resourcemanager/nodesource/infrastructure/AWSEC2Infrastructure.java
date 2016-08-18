@@ -48,6 +48,7 @@ import org.objectweb.proactive.core.ProActiveException;
 import org.objectweb.proactive.core.node.Node;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
+import org.python.google.common.collect.Sets;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -94,6 +95,9 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     @Configurable(description = "minimum number of CPU cores required")
     protected int cores = 1;
 
+    @Configurable(description = "Spot Price")
+    protected String spotPrice = null;
+
     protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
@@ -122,6 +126,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         this.additionalProperties = parameters[8].toString().trim();
         this.ram = Integer.parseInt(parameters[9].toString().trim());
         this.cores = Integer.parseInt(parameters[10].toString().trim());
+        this.spotPrice = parameters[11].toString().trim();
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
@@ -177,6 +182,10 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
             throw new IllegalArgumentException("The minimum number of cores required must be specified");
         }
 
+        if (parameters[11] == null) {
+            parameters[11] = "";
+        }
+
     }
 
     @Override
@@ -189,8 +198,15 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
         String instanceTag = getInfrastructureId();
 
-        Set<String> instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag,
-                image, numberOfInstances, cores, ram);
+        Set<String> instancesIds = Sets.newHashSet();
+
+        if (spotPrice.isEmpty()) {
+            instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag, image,
+                    numberOfInstances, cores, ram);
+        } else {
+            instancesIds = connectorIaasController.createInstancesWithSpotPrice(getInfrastructureId(),
+                    instanceTag, image, numberOfInstances, cores, ram, spotPrice);
+        }
 
         for (String instanceId : instancesIds) {
 

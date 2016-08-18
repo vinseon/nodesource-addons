@@ -26,12 +26,17 @@ public class ConnectorIaasJSONTransformer {
         return infrastructure.toString();
     }
 
-    public static String getInstanceJSON(String tag, String image, String number, String cpu, String ram) {
+    public static String getInstanceJSON(String tag, String image, String number, String cpu, String ram,
+            String spotPrice) {
         JSONObject hardware = new JSONObject();
         hardware.put("minCores", cpu);
         hardware.put("minRam", ram);
+        JSONObject options = new JSONObject();
+        if (spotPrice != null && !spotPrice.isEmpty()) {
+            options.put("spotPrice", spotPrice);
+        }
         return new JSONObject().put("tag", tag).put("image", image).put("number", number)
-                .put("hardware", hardware).toString();
+                .put("hardware", hardware).put("options", options).toString();
     }
 
     public static String getInstanceJSONWithPublicKeyAndScripts(String tag, String image, String number,
