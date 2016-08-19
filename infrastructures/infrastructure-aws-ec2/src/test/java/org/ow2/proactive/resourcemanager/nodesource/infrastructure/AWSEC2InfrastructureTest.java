@@ -77,7 +77,7 @@ public class AWSEC2InfrastructureTest {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1, "0.05");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -88,7 +88,7 @@ public class AWSEC2InfrastructureTest {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1, "0.05");
     }
 
     @Test
@@ -99,7 +99,7 @@ public class AWSEC2InfrastructureTest {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1, "0.05");
 
         awsec2Infrastructure.connectorIaasController = connectorIaasController;
         awsec2Infrastructure.nodeSource = nodeSource;
@@ -108,8 +108,8 @@ public class AWSEC2InfrastructureTest {
         when(connectorIaasController.createInfrastructure("node_source_name", "aws_key", "aws_secret_key",
                 null, true)).thenReturn("node_source_name");
 
-        when(connectorIaasController.createInstances("node_source_name", "node_source_name", "aws-image", 2,
-                1, 512)).thenReturn(Sets.newHashSet("123", "456"));
+        when(connectorIaasController.createInstancesWithSpotPrice("node_source_name", "node_source_name",
+                "aws-image", 2, 1, 512, "0.05")).thenReturn(Sets.newHashSet("123", "456"));
 
         awsec2Infrastructure.acquireNode();
 
@@ -118,8 +118,8 @@ public class AWSEC2InfrastructureTest {
         verify(connectorIaasController).createInfrastructure("node_source_name", "aws_key", "aws_secret_key",
                 null, true);
 
-        verify(connectorIaasController).createInstances("node_source_name", "node_source_name", "aws-image",
-                2, 1, 512);
+        verify(connectorIaasController).createInstancesWithSpotPrice("node_source_name", "node_source_name",
+                "aws-image", 2, 1, 512, "0.05");
 
         verify(connectorIaasController, times(2)).executeScript(anyString(), anyString(), anyList());
 
@@ -138,7 +138,7 @@ public class AWSEC2InfrastructureTest {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1, "0.05");
 
         awsec2Infrastructure.connectorIaasController = connectorIaasController;
 
@@ -170,7 +170,7 @@ public class AWSEC2InfrastructureTest {
 
         awsec2Infrastructure.configure("aws_key", "aws_secret_key", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "aws-image", "2", "3",
-                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1);
+                "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", 512, 1, "0.05");
 
         awsec2Infrastructure.connectorIaasController = connectorIaasController;
 

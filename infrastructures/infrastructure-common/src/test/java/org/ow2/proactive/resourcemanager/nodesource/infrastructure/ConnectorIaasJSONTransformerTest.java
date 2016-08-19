@@ -27,14 +27,28 @@ public class ConnectorIaasJSONTransformerTest {
 
     @Test
     public void testGetInstanceJSON() {
-        JSONObject actual = new JSONObject(
-            ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image", "number", "minCores", "minRam"));
+        JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image",
+                "number", "minCores", "minRam", null));
 
         assertThat(actual.getString("tag"), is("tag"));
         assertThat(actual.getString("image"), is("image"));
         assertThat(actual.getString("number"), is("number"));
         assertThat(actual.getJSONObject("hardware").getString("minCores"), is("minCores"));
         assertThat(actual.getJSONObject("hardware").getString("minRam"), is("minRam"));
+        assertThat(actual.getJSONObject("options").toString(), is("{}"));
+    }
+
+    @Test
+    public void testGetInstanceJSONWithSpotPrice() {
+        JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image",
+                "number", "minCores", "minRam", "0.05"));
+
+        assertThat(actual.getString("tag"), is("tag"));
+        assertThat(actual.getString("image"), is("image"));
+        assertThat(actual.getString("number"), is("number"));
+        assertThat(actual.getJSONObject("hardware").getString("minCores"), is("minCores"));
+        assertThat(actual.getJSONObject("hardware").getString("minRam"), is("minRam"));
+        assertThat(actual.getJSONObject("options").getString("spotPrice"), is("0.05"));
     }
 
     @Test
