@@ -1,4 +1,6 @@
 # ActiveEon ProActive Workflows and Scheduling 
+[![Build Status](http://jenkins.activeeon.com/buildStatus/icon?job=nodesource-addons)](http://jenkins.activeeon.com/job/nodesource-addons/)
+
 ## How to build
 1) Import Gradle project
 
