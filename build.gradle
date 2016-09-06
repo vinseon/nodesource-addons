@@ -12,6 +12,7 @@ buildscript {
 
         maven { url 'http://repository.activeeon.com/content/groups/proactive/' }
         maven { url "http://nexus.qmino.com/content/repositories/miredot" }
+        maven { url 'http://dl.bintray.com/content/abashev/vfs-s3'}
     }
 
     dependencies {
@@ -92,9 +93,7 @@ configure(javaSubprojects) {
         compile 'com.google.guava:guava:19.0'
         
         compile "org.ow2.proactive:rm-server:${rmVersion}"
-    	compile("org.objectweb.proactive:programming-core:${programmingVersion}") {
-            exclude module: 'vfs-s3'
-        }
+    	compile "org.objectweb.proactive:programming-core:${programmingVersion}"
     	compile 'com.google.guava:guava:19.0'
     	compile 'log4j:log4j:1.2.17'
     	
