@@ -46,9 +46,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.objectweb.proactive.core.ProActiveException;
 import org.objectweb.proactive.core.node.Node;
-import org.ow2.proactive.resourcemanager.exception.RMException;
-import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
-import org.python.google.common.collect.Sets;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -194,7 +191,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         connectorIaasController.waitForConnectorIaasToBeUP();
 
         connectorIaasController.createInfrastructure(getInfrastructureId(), aws_key, aws_secret_key, null,
-                true);
+                false);
 
         String instanceTag = getInfrastructureId();
 
