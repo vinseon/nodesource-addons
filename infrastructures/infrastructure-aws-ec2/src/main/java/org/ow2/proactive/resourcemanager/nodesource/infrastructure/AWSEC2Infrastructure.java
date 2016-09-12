@@ -50,6 +50,10 @@ import org.objectweb.proactive.core.node.Node;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import org.ow2.proactive.resourcemanager.exception.RMException;		
+import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;		
+import org.python.google.common.collect.Sets;
+
 
 public class AWSEC2Infrastructure extends InfrastructureManager {
 
