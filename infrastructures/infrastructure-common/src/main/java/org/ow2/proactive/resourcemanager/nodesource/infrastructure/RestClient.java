@@ -60,7 +60,7 @@ public class RestClient {
     public String postToScriptsWebResource(String infrastructureId, String key, String value,
             String scriptJson) {
         ResteasyWebTarget target = initWebTarget(connectorIaasURL + "/infrastructures/" + infrastructureId + "/instances/scripts");
-        Response response = target.request().post(Entity.entity(scriptJson, MediaType.APPLICATION_JSON_TYPE));
+        Response response = target.queryParam(key, value).request().post(Entity.entity(scriptJson, MediaType.APPLICATION_JSON_TYPE));
         return checkAndGetResponse(response);
     }
 
