@@ -116,7 +116,7 @@ public class AWSEC2InfrastructureTest {
         verify(connectorIaasController, times(1)).waitForConnectorIaasToBeUP();
 
         verify(connectorIaasController).createInfrastructure("node_source_name", "aws_key", "aws_secret_key",
-                null, true);
+                null, false);
 
         verify(connectorIaasController).createInstancesWithSpotPrice("node_source_name", "node_source_name",
                 "aws-image", 2, 1, 512, "0.05");
