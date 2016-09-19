@@ -80,7 +80,7 @@ public class ConnectorIaasControllerTest {
     public void testCreateInstances() {
 
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON("node_source_name", "image", "2",
-                "1", "512", "0.05");
+                "1", "512", "0.05", "default","127.0.0.1");
 
         Set<String> instanceIds = Sets.newHashSet("123", "456");
 
@@ -92,8 +92,8 @@ public class ConnectorIaasControllerTest {
         when(connectorIaasClient.getAllJsonInstancesByInfrastructureId("node_source_name"))
                 .thenReturn(existingInstances);
 
-        Set<String> instancesIds = connectorIaasController.createInstancesWithSpotPrice("node_source_name",
-                "node_source_name", "image", 2, 1, 512, "0.05");
+        Set<String> instancesIds = connectorIaasController.createInstancesWithOptions("node_source_name",
+                "node_source_name", "image", 2, 1, 512, "0.05","default","127.0.0.1");
 
         assertThat(instancesIds.size(), is(2));
         assertThat(instancesIds.containsAll(instanceIds), is(true));
@@ -137,7 +137,7 @@ public class ConnectorIaasControllerTest {
     public void testCreateInstancesAlreadyExistent() {
 
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON("node_source_name", "image", "2",
-                "1", "512", null);
+                "1", "512", null, null, null);
 
         Set<String> instanceIds = Sets.newHashSet("123", "456");
 

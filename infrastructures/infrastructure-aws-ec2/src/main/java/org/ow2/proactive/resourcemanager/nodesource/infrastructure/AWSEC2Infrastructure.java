@@ -98,6 +98,12 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
     @Configurable(description = "Spot Price")
     protected String spotPrice = null;
+    
+    @Configurable(description = "Security Group Names")
+    protected String securityGroupNames = null;
+    
+    @Configurable(description = "Subnet and VPC")
+    protected String subnetId = null;
 
     protected ConnectorIaasController connectorIaasController = null;
 
@@ -128,6 +134,8 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         this.ram = Integer.parseInt(parameters[9].toString().trim());
         this.cores = Integer.parseInt(parameters[10].toString().trim());
         this.spotPrice = parameters[11].toString().trim();
+        this.securityGroupNames = parameters[12].toString().trim();
+        this.subnetId = parameters[13].toString().trim();
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
@@ -201,12 +209,12 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
         Set<String> instancesIds = Sets.newHashSet();
 
-        if (spotPrice.isEmpty()) {
+        if (spotPrice.isEmpty() && securityGroupNames.isEmpty() && subnetId.isEmpty()) {
             instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag, image,
                     numberOfInstances, cores, ram);
         } else {
-            instancesIds = connectorIaasController.createInstancesWithSpotPrice(getInfrastructureId(),
-                    instanceTag, image, numberOfInstances, cores, ram, spotPrice);
+            instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(),
+                    instanceTag, image, numberOfInstances, cores, ram, spotPrice, securityGroupNames, subnetId);
         }
 
         for (String instanceId : instancesIds) {

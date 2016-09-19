@@ -1,6 +1,9 @@
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,14 +30,28 @@ public class ConnectorIaasJSONTransformer {
     }
 
     public static String getInstanceJSON(String tag, String image, String number, String cpu, String ram,
-            String spotPrice) {
+            String spotPrice, String securityGroupNames, String subnetId) {
         JSONObject hardware = new JSONObject();
         hardware.put("minCores", cpu);
         hardware.put("minRam", ram);
+        
+        
         JSONObject options = new JSONObject();
+        
         if (spotPrice != null && !spotPrice.isEmpty()) {
             options.put("spotPrice", spotPrice);
         }
+        
+        if (securityGroupNames != null && !securityGroupNames.isEmpty()) {	
+        	String[] groups = securityGroupNames.split(",");
+        	Set<String> securityGroupNamesSet = new HashSet<String>(Arrays.asList(groups));
+            options.put("securityGroupNames", securityGroupNamesSet);
+        }
+        
+        if (subnetId != null && !subnetId.isEmpty()) {
+            options.put("subnetId", subnetId);
+        }
+        
         return new JSONObject().put("tag", tag).put("image", image).put("number", number)
                 .put("hardware", hardware).put("options", options).toString();
     }
