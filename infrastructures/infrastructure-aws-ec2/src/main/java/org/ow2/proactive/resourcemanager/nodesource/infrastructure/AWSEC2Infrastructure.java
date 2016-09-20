@@ -194,6 +194,14 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
         if (parameters[11] == null) {
             parameters[11] = "";
         }
+        
+        if (parameters[12] == null) {
+            parameters[12] = "";
+        }
+        
+        if (parameters[13] == null) {
+            parameters[13] = "";
+        }
 
     }
 
