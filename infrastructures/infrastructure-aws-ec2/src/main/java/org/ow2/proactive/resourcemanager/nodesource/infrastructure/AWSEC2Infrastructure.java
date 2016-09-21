@@ -142,7 +142,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
     }
 
     private void validate(Object[] parameters) {
-        if (parameters == null || parameters.length < 11) {
+        if (parameters == null || parameters.length < 14) {
             throw new IllegalArgumentException("Invalid parameters for EC2Infrastructure creation");
         }
 
