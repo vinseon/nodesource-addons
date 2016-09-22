@@ -88,14 +88,14 @@ public class ConnectorIaasController {
 
         String scriptResult = null;
         try {
+        	
             scriptResult = connectorIaasClient.runScriptOnInstance(infrastructureId, instanceId,
                     instanceScriptJson);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Executed successfully script for instance id :" + instanceId +
-                    "\nScript contents : " + instanceScriptJson + " \nResult : " + scriptResult);
-            } else {
-                logger.info("Script result for instance id " + instanceId + " : " + scriptResult);
-            }
+       
+            	logger.info("Executed successfully script for instance id :" + instanceId );
+            	logger.info("InstanceScriptJson : " + instanceScriptJson);
+                logger.info("Script result : " + scriptResult);
+            
         } catch (Exception e) {
             logger.error("Error while executing script :\n" + instanceScriptJson, e);
         }
