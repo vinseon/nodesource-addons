@@ -30,7 +30,7 @@ public class ConnectorIaasJSONTransformer {
     }
 
     public static String getInstanceJSON(String tag, String image, String number, String cpu, String ram,
-            String spotPrice, String securityGroupNames, String subnetId) {
+            String spotPrice, String securityGroupNames, String subnetId, String macAddresses) {
         JSONObject hardware = new JSONObject();
         hardware.put("minCores", cpu);
         hardware.put("minRam", ram);
@@ -50,6 +50,16 @@ public class ConnectorIaasJSONTransformer {
         
         if (subnetId != null && !subnetId.isEmpty()) {
             options.put("subnetId", subnetId);
+        }
+         
+        if (macAddresses != null && !macAddresses.isEmpty()) {
+            /*JSONArray addresses = new JSONArray();
+            for (String address : macAddresses.split(",")) {
+                addresses.put(address);
+            }*/
+            String[] addresses = macAddresses.split(",");
+            Set<String> addressesSet = new HashSet<>(Arrays.asList(addresses));
+            options.put("macAddresses", addressesSet);
         }
         
         return new JSONObject().put("tag", tag).put("image", image).put("number", number)

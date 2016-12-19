@@ -47,10 +47,10 @@ public class ConnectorIaasController {
     }
 
     public Set<String> createInstancesWithOptions(String infrastructureId, String instanceTag, String image,
-            int numberOfInstances, int cores, int ram, String spotPrice, String securityGroupNames, String subnetId) {
+            int numberOfInstances, int cores, int ram, String spotPrice, String securityGroupNames, String subnetId, String macAddresses) {
 
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image,
-                "" + numberOfInstances, "" + cores, "" + ram, spotPrice, securityGroupNames, subnetId);
+                "" + numberOfInstances, "" + cores, "" + ram, spotPrice, securityGroupNames, subnetId, macAddresses);
 
         return createInstance(infrastructureId, instanceTag, instanceJson);
     }
@@ -59,7 +59,7 @@ public class ConnectorIaasController {
             int numberOfInstances, int cores, int ram) {
 
         String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag, image,
-                "" + numberOfInstances, "" + cores, "" + ram, null, null, null);
+                "" + numberOfInstances, "" + cores, "" + ram, null, null, null, null);
 
         return createInstance(infrastructureId, instanceTag, instanceJson);
     }
