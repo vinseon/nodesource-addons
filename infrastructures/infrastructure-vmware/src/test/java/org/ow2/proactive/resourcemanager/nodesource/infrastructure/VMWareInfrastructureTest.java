@@ -70,6 +70,7 @@ public class VMWareInfrastructureTest {
 
         }
         assertThat(vmwareInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
+        assertThat(vmwareInfrastructure.macAddresses, is(nullValue()));
 
     }
 
@@ -80,7 +81,7 @@ public class VMWareInfrastructureTest {
 
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
-                "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
+                "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", "00:50:56:11:11:11");
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -102,7 +103,7 @@ public class VMWareInfrastructureTest {
 
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "512", "1", "vmUsername",
-                "vmPassword", "1", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
+                "vmPassword", "1", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", "00:50:56:11:11:11");
 
         vmwareInfrastructure.connectorIaasController = connectorIaasController;
 
@@ -140,7 +141,7 @@ public class VMWareInfrastructureTest {
 
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
-                "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
+                "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", "00:50:56:11:11:11");
 
         vmwareInfrastructure.connectorIaasController = connectorIaasController;
 
@@ -171,7 +172,7 @@ public class VMWareInfrastructureTest {
         vmwareInfrastructure.nodeSource = nodeSource;
         vmwareInfrastructure.configure("username", "password", "endpoint", "test.activeeon.com",
                 "http://localhost:8088/connector-iaas", "vmware-image", "1", "512", "vmUsername",
-                "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value");
+                "vmPassword", "2", "3", "wget -nv test.activeeon.com/rest/node.jar", "-Dnew=value", "00:50:56:11:11:11");
 
         vmwareInfrastructure.connectorIaasController = connectorIaasController;
 
