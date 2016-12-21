@@ -219,7 +219,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         String instanceTag = getInfrastructureId();
         Set<String> instancesIds;
-        if (macAddresses != null) {
+        if (!macAddresses.isEmpty()) {
             instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(), instanceTag, image,
                     numberOfInstances, cores, ram, null, null, null, macAddresses);
         } else {

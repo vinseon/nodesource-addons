@@ -1,5 +1,6 @@
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -53,13 +54,9 @@ public class ConnectorIaasJSONTransformer {
         }
          
         if (macAddresses != null && !macAddresses.isEmpty()) {
-            /*JSONArray addresses = new JSONArray();
-            for (String address : macAddresses.split(",")) {
-                addresses.put(address);
-            }*/
             String[] addresses = macAddresses.split(",");
-            Set<String> addressesSet = new HashSet<>(Arrays.asList(addresses));
-            options.put("macAddresses", addressesSet);
+            List<String> addressesList = Arrays.asList(addresses);
+            options.put("macAddresses", addressesList);
         }
         
         return new JSONObject().put("tag", tag).put("image", image).put("number", number)
