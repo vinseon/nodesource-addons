@@ -217,7 +217,6 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
 
         Set<String> instancesIds = Sets.newHashSet();
 
-        // MAC addresses not yet managed
         if (spotPrice.isEmpty() && securityGroupNames.isEmpty() && subnetId.isEmpty()) {
             instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag, image,
                     numberOfInstances, cores, ram);

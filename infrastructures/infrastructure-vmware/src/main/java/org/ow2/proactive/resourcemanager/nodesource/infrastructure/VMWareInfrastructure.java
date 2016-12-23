@@ -99,7 +99,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
     @Configurable(description = "Command used to download the worker jar")
     protected String downloadCommand = generateDefaultDownloadCommand();
 
-    @Configurable(description = "Optional list of MAC addresses separated by comma ',' to assign on new cloned VMs (1 per instance)")
+    @Configurable(description = "Optional list of MAC addresses separated by comma ',' to assign on new cloned VMs")
     protected String macAddresses = null;
 
     @Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
