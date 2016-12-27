@@ -109,7 +109,7 @@ public class AWSEC2InfrastructureTest {
                 null, true)).thenReturn("node_source_name");
 
         when(connectorIaasController.createInstancesWithOptions("node_source_name", "node_source_name",
-                "aws-image", 2, 1, 512, "0.05", "default","127.0.0.1")).thenReturn(Sets.newHashSet("123", "456"));
+                "aws-image", 2, 1, 512, "0.05", "default","127.0.0.1", null)).thenReturn(Sets.newHashSet("123", "456"));
 
         awsec2Infrastructure.acquireNode();
 
@@ -119,7 +119,7 @@ public class AWSEC2InfrastructureTest {
                 null, false);
 
         verify(connectorIaasController).createInstancesWithOptions("node_source_name", "node_source_name",
-                "aws-image", 2, 1, 512, "0.05", "default","127.0.0.1");
+                "aws-image", 2, 1, 512, "0.05", "default","127.0.0.1", null);
 
         verify(connectorIaasController, times(2)).executeScript(anyString(), anyString(), anyList());
 

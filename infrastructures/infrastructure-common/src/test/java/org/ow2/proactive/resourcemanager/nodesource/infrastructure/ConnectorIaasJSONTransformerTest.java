@@ -28,7 +28,7 @@ public class ConnectorIaasJSONTransformerTest {
     @Test
     public void testGetInstanceJSON() {
         JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image",
-                "number", "minCores", "minRam", null, null, null));
+                "number", "minCores", "minRam", null, null, null, null));
 
         assertThat(actual.getString("tag"), is("tag"));
         assertThat(actual.getString("image"), is("image"));
@@ -41,7 +41,8 @@ public class ConnectorIaasJSONTransformerTest {
     @Test
     public void testGetInstanceJSONWithSpotPrice() {
         JSONObject actual = new JSONObject(ConnectorIaasJSONTransformer.getInstanceJSON("tag", "image",
-                "number", "minCores", "minRam", "0.05", "default","127.0.0.1"));
+                "number", "minCores", "minRam", "0.05", "default",
+                "127.0.0.1", "00:50:56:11:11:11"));
 
         assertThat(actual.getString("tag"), is("tag"));
         assertThat(actual.getString("image"), is("image"));
@@ -49,6 +50,7 @@ public class ConnectorIaasJSONTransformerTest {
         assertThat(actual.getJSONObject("hardware").getString("minCores"), is("minCores"));
         assertThat(actual.getJSONObject("hardware").getString("minRam"), is("minRam"));
         assertThat(actual.getJSONObject("options").getString("spotPrice"), is("0.05"));
+        assertThat(actual.getJSONObject("options").getJSONArray("macAddresses").toString(), is("[\"00:50:56:11:11:11\"]"));
     }
 
     @Test

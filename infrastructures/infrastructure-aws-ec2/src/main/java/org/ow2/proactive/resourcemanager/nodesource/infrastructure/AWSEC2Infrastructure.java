@@ -222,7 +222,7 @@ public class AWSEC2Infrastructure extends InfrastructureManager {
                     numberOfInstances, cores, ram);
         } else {
             instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(),
-                    instanceTag, image, numberOfInstances, cores, ram, spotPrice, securityGroupNames, subnetId);
+                    instanceTag, image, numberOfInstances, cores, ram, spotPrice, securityGroupNames, subnetId, null);
         }
 
         for (String instanceId : instancesIds) {

@@ -87,7 +87,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
     @Configurable(description = "The virtual machine Username")
     protected String vmUsername = null;
 
-    @Configurable(description = "TThe virtual machine Password")
+    @Configurable(description = "The virtual machine Password")
     protected String vmPassword = null;
 
     @Configurable(description = "Total instance to create")
@@ -98,6 +98,9 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
     @Configurable(description = "Command used to download the worker jar")
     protected String downloadCommand = generateDefaultDownloadCommand();
+
+    @Configurable(description = "Optional list of MAC addresses separated by comma ',' to assign on new cloned VMs")
+    protected String macAddresses = null;
 
     @Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
     protected String additionalProperties = "-Dproactive.useIPaddress=true";
@@ -132,7 +135,8 @@ public class VMWareInfrastructure extends InfrastructureManager {
         this.numberOfInstances = Integer.parseInt(parameters[10].toString().trim());
         this.numberOfNodesPerInstance = Integer.parseInt(parameters[11].toString().trim());
         this.downloadCommand = parameters[12].toString().trim();
-        this.additionalProperties = parameters[13].toString().trim();
+        this.macAddresses = parameters[13].toString().trim();
+        this.additionalProperties = parameters[14].toString().trim();
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
 
@@ -199,6 +203,10 @@ public class VMWareInfrastructure extends InfrastructureManager {
         if (parameters[13] == null) {
             parameters[13] = "";
         }
+
+        if (parameters[14] == null) {
+            parameters[14] = "";
+        }
     }
 
     @Override
@@ -210,9 +218,15 @@ public class VMWareInfrastructure extends InfrastructureManager {
                 false);
 
         String instanceTag = getInfrastructureId();
+        Set<String> instancesIds;
+        if (!macAddresses.isEmpty()) {
+            instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(), instanceTag, image,
+                    numberOfInstances, cores, ram, null, null, null, macAddresses);
+        } else {
 
-        Set<String> instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag,
-                image, numberOfInstances, cores, ram);
+            instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag,
+                    image, numberOfInstances, cores, ram);
+        }
 
         logger.info("Instances ids created : " + instancesIds);
 
