@@ -1,38 +1,27 @@
 /*
- * ################################################################
+ * ProActive Parallel Suite(TM):
+ * The Open Source library for parallel and distributed
+ * Workflows & Scheduling, Orchestration, Cloud Automation
+ * and Big Data Analysis on Enterprise Grids & Clouds.
  *
- * ProActive Parallel Suite(TM): The Java(TM) library for
- *    Parallel, Distributed, Multi-Core Computing for
- *    Enterprise Grids & Clouds
+ * Copyright (c) 2007 - 2017 ActiveEon
+ * Contact: contact@activeeon.com
  *
- * Copyright (C) 1997-2015 INRIA/University of
- *                 Nice-Sophia Antipolis/ActiveEon
- * Contact: proactive@ow2.org or contact@activeeon.com
- *
- * This library is free software; you can redistribute it and/or
+ * This library is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License
- * as published by the Free Software Foundation; version 3 of
+ * as published by the Free Software Foundation: version 3 of
  * the License.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
- * USA
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * If needed, contact us to obtain a release under GPL Version 2 or 3
  * or a different license than the AGPL.
- *
- *  Initial developer(s):               The ActiveEon Team
- *                        http://www.activeeon.com/
- *  Contributor(s):
- *
- * ################################################################
- * $$ACTIVEEON_INITIAL_DEV$$
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
@@ -58,6 +47,7 @@ import org.ow2.proactive.resourcemanager.utils.CommandLineBuilder;
 import org.ow2.proactive.resourcemanager.utils.OperatingSystem;
 import org.ow2.proactive.utils.FileToBytesConverter;
 import org.python.google.common.collect.Maps;
+
 import com.google.common.base.Throwables;
 
 
@@ -69,6 +59,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      */
     @Configurable(description = "Maximum number of nodes to deploy")
     protected int maxNodes = 1;
+
     /** The atomic value of max nodes */
     protected AtomicInteger atomicMaxNodes = null;
 
@@ -123,18 +114,25 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
 
     /** Credentials used by remote nodes to register to the NS */
     private Credentials credentials = null;
+
     /** The credentials value as a string */
     private String credBase64 = null;
+
     /** the path of the trust store which holds hpc server's certificate */
     private String trustStorePath;
+
     /** the list of submitted jobs */
     private Map<String, EndpointReferenceType[]> submittedJobs = Maps.newHashMap();
+
     /** ensures that the deploying node's timeout is not finished */
     private Map<String, Boolean> dnTimeout = Maps.newHashMap();
+
     /** to retrieve job's data from deploying node's url */
     private Map<String, EndpointReferenceType[]> deployingNodeToEndpoint = Maps.newHashMap();
+
     /** the deployer instance */
     private transient org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer deployer;
+
     /** the refresh rate of the job's state in ms */
     private static final int JOB_STATE_REFRESH_RATE = 1000;
 
@@ -163,7 +161,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         synchronized (submittedJobs) {
             if (submittedJobs.size() >= maxNodes) {
                 logger.warn("Attempting to acquire nodes while maximum reached: max nodes " + maxNodes +
-                    ", current nodes " + submittedJobs.size());
+                            ", current nodes " + submittedJobs.size());
                 return;
             }
         }
@@ -207,8 +205,10 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
             this.handleFailedDeployment(clb, e);
         }
 
-        String dNode = super.addDeployingNode(nodeName, obfuscatedFullCommand,
-                "Node deployment on Windows HPC", timeout);
+        String dNode = super.addDeployingNode(nodeName,
+                                              obfuscatedFullCommand,
+                                              "Node deployment on Windows HPC",
+                                              timeout);
         // we add the timeout flag
         this.dnTimeout.put(dNode, false);
         this.submittedJobs.put(nodeName, eprs);
@@ -217,8 +217,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         logger.debug("Executing: " + fullCommand);
         try {
             eprs[0] = this.getDeployer()
-                    .createActivity(org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer
-                            .createJSDLDocument(fullCommand));
+                          .createActivity(org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer.createJSDLDocument(fullCommand));
         } catch (Exception e) {
             this.handleFailedDeployment(dNode, clb, e);
         }
@@ -257,8 +256,9 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
             // if the status changed, we update it
             if (currentStatus != null && !currentStatus.equals(statusString)) {
                 statusString = currentStatus;
-                super.updateDeployingNodeDescription(dNode, "Node deployment on Windows HPC" +
-                    System.lineSeparator() + "job's status: " + statusString);
+                super.updateDeployingNodeDescription(dNode,
+                                                     "Node deployment on Windows HPC" + System.lineSeparator() +
+                                                            "job's status: " + statusString);
             }
 
             if (super.checkNodeIsAcquiredAndDo(nodeName, null, null)) {
@@ -312,8 +312,7 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      * @param cause
      * @throws RMException
      */
-    private void handleFailedDeployment(String dNode, CommandLineBuilder clb, String cause)
-            throws RMException {
+    private void handleFailedDeployment(String dNode, CommandLineBuilder clb, String cause) throws RMException {
         String nodeName = clb.getNodeName();
         this.submittedJobs.remove(nodeName);
         this.dnTimeout.remove(dNode);
@@ -331,11 +330,10 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
      *            the exception that caused the deployment to fail
      * @throws RMException
      */
-    private void handleFailedDeployment(String dNode, CommandLineBuilder clb, Throwable e)
-            throws RMException {
+    private void handleFailedDeployment(String dNode, CommandLineBuilder clb, Throwable e) throws RMException {
         String error = Throwables.getStackTraceAsString(e);
         super.declareDeployingNodeLost(dNode,
-                "The deployment failed because of an error: " + System.lineSeparator() + error);
+                                       "The deployment failed because of an error: " + System.lineSeparator() + error);
         String nodeName = clb.getNodeName();
         this.submittedJobs.remove(nodeName);
         this.dnTimeout.remove(dNode);
@@ -359,8 +357,11 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
         } catch (Exception ex) {
             command = "Cannot determine the command used to start the node : " + ex.getMessage();
         }
-        String lostNode = super.addDeployingNode(clb.getNodeName(), command,
-                "Cannot deploy the node because of an error:" + System.lineSeparator() + error, 60000);
+        String lostNode = super.addDeployingNode(clb.getNodeName(),
+                                                 command,
+                                                 "Cannot deploy the node because of an error:" +
+                                                          System.lineSeparator() + error,
+                                                 60000);
         super.declareDeployingNodeLost(lostNode, null);
         String nodeName = clb.getNodeName();
         this.submittedJobs.remove(nodeName);
@@ -503,11 +504,14 @@ public class WinHPCInfrastructure extends DefaultInfrastructureManager {
             throws RMException {
         if (this.deployer == null) {
             try {
-                this.deployer = new org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer(
-                    new File(PAResourceManagerProperties.RM_HOME.getValueAsString(),
-                        "config" + File.separator + "rm" + File.separator + "deployment" + File.separator +
-                            "winhpc" + File.separator).getAbsolutePath(),
-                    serviceUrl, userName, password);
+                this.deployer = new org.ow2.proactive.resourcemanager.nodesource.infrastructure.WinHPCDeployer(new File(PAResourceManagerProperties.RM_HOME.getValueAsString(),
+                                                                                                                        "config" + File.separator + "rm" + File.separator + "deployment" +
+                                                                                                                                                                                File.separator +
+                                                                                                                                                                                "winhpc" +
+                                                                                                                                                                                File.separator).getAbsolutePath(),
+                                                                                                               serviceUrl,
+                                                                                                               userName,
+                                                                                                               password);
             } catch (Exception e) {
                 throw new RMException("Cannot instantiate the win hpc deployer", e);
             }

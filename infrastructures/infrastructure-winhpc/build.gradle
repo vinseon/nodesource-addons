@@ -4,7 +4,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 shadowJar {
 
 }
-   
+
 sourceCompatibility = JavaVersion.VERSION_1_7
 targetCompatibility = JavaVersion.VERSION_1_7
 
@@ -14,27 +14,27 @@ dependencies {
     compile 'org.apache.axis2:axis2:1.4'
     compile 'org.apache.ws.commons.axiom:axiom-api:1.2.7'
     compile 'winhpc:WinHPCWebserviceStubs:1.0-proactive'
-    
+
     testCompile files("${System.properties['java.home']}/../lib/tools.jar")
-	testCompile 'junit:junit:4.12'
-	testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
-	testCompile 'org.mockito:mockito-core:1.10.19'
-	
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+
 }
-    
+
 configurations {
     shadowJar
 
     runtime.extendsFrom = [compile]
     runtime.exclude module: 'rm-server'
-	runtime.exclude module: 'programming-core'
-	runtime.exclude module: 'guava'
-	runtime.exclude module: 'log4j'
-	
+    runtime.exclude module: 'programming-core'
+    runtime.exclude module: 'guava'
+    runtime.exclude module: 'log4j'
+
     testRuntime.extendsFrom = [testCompile]
 }
 
-    
+
 jar {
     manifest {
         attributes("Implementation-Title": "ProActive",

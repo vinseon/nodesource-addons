@@ -11,15 +11,14 @@ dependencies {
     compile 'org.jboss.resteasy:resteasy-jackson-provider:3.0.17.Final'
     compile 'org.jboss.resteasy:resteasy-multipart-provider:3.0.17.Final'
     compile 'org.json:json:20151123'
-    
+
     compile "org.ow2.proactive:rm-server:${rmVersion}"
-	compile "org.objectweb.proactive:programming-core:${programmingVersion}"
-	compile 'com.google.guava:guava:19.0'
-	compile 'log4j:log4j:1.2.17'
-	
-	testCompile files("${System.properties['java.home']}/../lib/tools.jar")
+    compile "org.objectweb.proactive:programming-core:${programmingVersion}"
+    compile 'com.google.guava:guava:19.0'
+    compile 'log4j:log4j:1.2.17'
+
+    testCompile files("${System.properties['java.home']}/../lib/tools.jar")
     testCompile 'junit:junit:4.12'
-	testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
-	testCompile 'org.mockito:mockito-core:1.10.19'
+    testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
+    testCompile 'org.mockito:mockito-core:1.10.19'
 }
-    

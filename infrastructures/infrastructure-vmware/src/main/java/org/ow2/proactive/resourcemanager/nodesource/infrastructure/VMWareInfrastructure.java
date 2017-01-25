@@ -1,38 +1,27 @@
 /*
- * ################################################################
+ * ProActive Parallel Suite(TM):
+ * The Open Source library for parallel and distributed
+ * Workflows & Scheduling, Orchestration, Cloud Automation
+ * and Big Data Analysis on Enterprise Grids & Clouds.
  *
- * ProActive Parallel Suite(TM): The Java(TM) library for
- *    Parallel, Distributed, Multi-Core Computing for
- *    Enterprise Grids & Clouds
+ * Copyright (c) 2007 - 2017 ActiveEon
+ * Contact: contact@activeeon.com
  *
- * Copyright (C) 1997-2015 INRIA/University of
- *                 Nice-Sophia Antipolis/ActiveEon
- * Contact: proactive@ow2.org or contact@activeeon.com
- *
- * This library is free software; you can redistribute it and/or
+ * This library is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Affero General Public License
- * as published by the Free Software Foundation; version 3 of
+ * as published by the Free Software Foundation: version 3 of
  * the License.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Affero General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
- * USA
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * If needed, contact us to obtain a release under GPL Version 2 or 3
  * or a different license than the AGPL.
- *
- *  Initial developer(s):               The ProActive Team
- *                        http://proactive.inria.fr/team_members.htm
- *  Contributor(s):
- *
- * ################################################################
- * $$PROACTIVE_INITIAL_DEV$$
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
@@ -192,8 +181,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
         }
 
         if (parameters[11] == null) {
-            throw new IllegalArgumentException(
-                "The number of nodes per instance to deploy must be specified");
+            throw new IllegalArgumentException("The number of nodes per instance to deploy must be specified");
         }
 
         if (parameters[12] == null) {
@@ -214,18 +202,29 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        connectorIaasController.createInfrastructure(getInfrastructureId(), username, password, endpoint,
-                false);
+        connectorIaasController.createInfrastructure(getInfrastructureId(), username, password, endpoint, false);
 
         String instanceTag = getInfrastructureId();
         Set<String> instancesIds;
         if (!macAddresses.isEmpty()) {
-            instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(), instanceTag, image,
-                    numberOfInstances, cores, ram, null, null, null, macAddresses);
+            instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(),
+                                                                              instanceTag,
+                                                                              image,
+                                                                              numberOfInstances,
+                                                                              cores,
+                                                                              ram,
+                                                                              null,
+                                                                              null,
+                                                                              null,
+                                                                              macAddresses);
         } else {
 
-            instancesIds = connectorIaasController.createInstances(getInfrastructureId(), instanceTag,
-                    image, numberOfInstances, cores, ram);
+            instancesIds = connectorIaasController.createInstances(getInfrastructureId(),
+                                                                   instanceTag,
+                                                                   image,
+                                                                   numberOfInstances,
+                                                                   cores,
+                                                                   ram);
         }
 
         logger.info("Instances ids created : " + instancesIds);
@@ -233,10 +232,13 @@ public class VMWareInfrastructure extends InfrastructureManager {
         for (String instanceId : instancesIds) {
 
             String fullScript = "-c '" + this.downloadCommand + ";nohup " +
-                generateDefaultStartNodeCommand(instanceId) + "  &'";
+                                generateDefaultStartNodeCommand(instanceId) + "  &'";
 
-            connectorIaasController.executeScriptWithCredentials(getInfrastructureId(), instanceId,
-                    Lists.newArrayList(fullScript), vmUsername, vmPassword);
+            connectorIaasController.executeScriptWithCredentials(getInfrastructureId(),
+                                                                 instanceId,
+                                                                 Lists.newArrayList(fullScript),
+                                                                 vmUsername,
+                                                                 vmPassword);
         }
 
     }
@@ -308,8 +310,8 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
-            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
-                this.rmHostname + ":8080/rest/node.jar" + "', 'node.jar') }\"";
+            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" + this.rmHostname +
+                   ":8080/rest/node.jar" + "', 'node.jar') }\"";
         } else {
             return "wget -nv http://" + this.rmHostname + ":8080/rest/node.jar";
         }
@@ -321,14 +323,13 @@ public class VMWareInfrastructure extends InfrastructureManager {
 
             String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
             return "java -jar node.jar -Dproactive.communication.protocol=" + protocol +
-                " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
-                instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " +
-                nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+                   " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
+                   instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName() +
+                   " -w " + numberOfNodesPerInstance;
         } catch (Exception e) {
             logger.error("Exception when generating the command, fallback on default value", e);
-            return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " +
-                additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " +
-                numberOfNodesPerInstance;
+            return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " + additionalProperties +
+                   " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
         }
     }
 

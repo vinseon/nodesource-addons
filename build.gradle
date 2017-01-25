@@ -30,7 +30,7 @@ apply from: "$rootDir/gradle/ext/coding-format.gradle"
 
 allprojects {
     apply plugin: 'maven'
-    
+
     group = 'org.ow2.proactive'
     version = nodesourceAddonsVersion
 
@@ -62,66 +62,66 @@ ext.javaSubprojects = subprojects.findAll { new File(it.projectDir, "src").exist
 configure(javaSubprojects) {
     apply plugin: 'java'
     apply plugin: "sonar-runner"
-    apply plugin: 'jacoco'  
-    
+    apply plugin: 'jacoco'
+
     sonarRunner {
-	    sonarProperties {    
-	    	property "sonar.projectKey", "$project.group:nodesource-addons"
-	    	property "sonar.projectName", "nodesource-addons" 
-	        property "sonar.jdbc.driverClassName", "org.postgresql.Driver"
-	        property "sonar.language", "java"
-	        property "sonar.sources", "src/main"
-	        property 'sonar.jacoco.reportPath', "${buildDir}/jacoco/testDebug.exec"
-	        property 'sonar.junit.reportsPath', "${buildDir}/test-results"
-	    }
-	}
-	    
-    
-	jacoco {
-	    toolVersion = '0.7.1.201405082137'
-	}
-	
-	jacocoTestReport {
-	    additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
-	    sourceDirectories = files(sourceSets.main.allSource.srcDirs)
-	    classDirectories =  files(sourceSets.main.output)
-	    reports {
-	        html.enabled = true
-	        xml.enabled = true
-	        csv.enabled = false
-	    }
-	}
-	
-        
+        sonarProperties {
+            property "sonar.projectKey", "$project.group:nodesource-addons"
+            property "sonar.projectName", "nodesource-addons"
+            property "sonar.jdbc.driverClassName", "org.postgresql.Driver"
+            property "sonar.language", "java"
+            property "sonar.sources", "src/main"
+            property 'sonar.jacoco.reportPath', "${buildDir}/jacoco/testDebug.exec"
+            property 'sonar.junit.reportsPath', "${buildDir}/test-results"
+        }
+    }
+
+
+    jacoco {
+        toolVersion = '0.7.1.201405082137'
+    }
+
+    jacocoTestReport {
+        additionalSourceDirs = files(sourceSets.main.allSource.srcDirs)
+        sourceDirectories = files(sourceSets.main.allSource.srcDirs)
+        classDirectories =  files(sourceSets.main.output)
+        reports {
+            html.enabled = true
+            xml.enabled = true
+            csv.enabled = false
+        }
+    }
+
+
 
     dependencies {
         compile 'log4j:log4j:1.2.17'
         compile 'com.google.guava:guava:19.0'
-        
-        compile "org.ow2.proactive:rm-server:${rmVersion}"
-    	compile "org.objectweb.proactive:programming-core:${programmingVersion}"
-    	compile 'com.google.guava:guava:19.0'
-    	compile 'log4j:log4j:1.2.17'
-    	
-    	testCompile files("${System.properties['java.home']}/../lib/tools.jar")
-        testCompile 'junit:junit:4.12'
-    	testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
-    	testCompile 'org.mockito:mockito-core:1.10.19'
-    }
-    
-    configurations {
-	    shadowJar
-	
-	    runtime.extendsFrom = [compile]
-	    runtime.exclude module: 'rm-server'
-		runtime.exclude module: 'programming-core'
-		runtime.exclude module: 'guava'
-		runtime.exclude module: 'log4j'
-		
-	    testRuntime.extendsFrom = [testCompile]
-	}
 
-    
+        compile "org.ow2.proactive:rm-server:${rmVersion}"
+        compile "org.objectweb.proactive:programming-core:${programmingVersion}"
+        compile 'com.google.guava:guava:19.0'
+        compile 'log4j:log4j:1.2.17'
+
+        testCompile files("${System.properties['java.home']}/../lib/tools.jar")
+        testCompile 'junit:junit:4.12'
+        testCompile 'org.hamcrest:hamcrest-junit:2.0.0.0'
+        testCompile 'org.mockito:mockito-core:1.10.19'
+    }
+
+    configurations {
+        shadowJar
+
+        runtime.extendsFrom = [compile]
+        runtime.exclude module: 'rm-server'
+        runtime.exclude module: 'programming-core'
+        runtime.exclude module: 'guava'
+        runtime.exclude module: 'log4j'
+
+        testRuntime.extendsFrom = [testCompile]
+    }
+
+
     jar {
         manifest {
             attributes("Implementation-Title": "ProActive",
@@ -133,6 +133,3 @@ configure(javaSubprojects) {
         }
     }
 }
-
-
-

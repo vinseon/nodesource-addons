@@ -1,3 +1,28 @@
+/*
+ * ProActive Parallel Suite(TM):
+ * The Open Source library for parallel and distributed
+ * Workflows & Scheduling, Orchestration, Cloud Automation
+ * and Big Data Analysis on Enterprise Grids & Clouds.
+ *
+ * Copyright (c) 2007 - 2017 ActiveEon
+ * Contact: contact@activeeon.com
+ *
+ * This library is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Affero General Public License
+ * as published by the Free Software Foundation: version 3 of
+ * the License.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * If needed, contact us to obtain a release under GPL Version 2 or 3
+ * or a different license than the AGPL.
+ */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -38,7 +63,7 @@ public class ConnectorIaasClientTest {
     public void testCreateInfrastructure() {
 
         Mockito.when(restClient.postToInfrastructuresWebResource(infrastructureJson))
-                .thenReturn("{'infrastructureId' : 'infra123'}");
+               .thenReturn("{'infrastructureId' : 'infra123'}");
         connectorIaasClient.createInfrastructure("infra123", infrastructureJson);
 
         InOrder inOrderRestClient = Mockito.inOrder(restClient);
@@ -51,10 +76,12 @@ public class ConnectorIaasClientTest {
     public void testCreateInstances() {
 
         Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\",tag=\"instanceTag123\"}"))
-                .thenReturn("[{'id' : 'instance123'}]");
+               .thenReturn("[{'id' : 'instance123'}]");
 
-        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123", "instanceTag123",
-                "{id=\"123\",tag=\"instanceTag123\"}", Sets.<JSONObject> newHashSet());
+        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123",
+                                                                                "instanceTag123",
+                                                                                "{id=\"123\",tag=\"instanceTag123\"}",
+                                                                                Sets.<JSONObject> newHashSet());
 
         assertThat(instances.size(), is(1));
 
@@ -66,10 +93,12 @@ public class ConnectorIaasClientTest {
     public void testCreateMultipleInstances() {
 
         Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\",tag=\"instanceTag123\"}"))
-                .thenReturn("[{'id' : 'instance123'},{'id' : 'instance456'},{'id' : 'instance789'}]");
+               .thenReturn("[{'id' : 'instance123'},{'id' : 'instance456'},{'id' : 'instance789'}]");
 
-        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123", "instanceTag123",
-                "{id=\"123\",tag=\"instanceTag123\"}", Sets.<JSONObject> newHashSet());
+        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123",
+                                                                                "instanceTag123",
+                                                                                "{id=\"123\",tag=\"instanceTag123\"}",
+                                                                                Sets.<JSONObject> newHashSet());
 
         assertThat(instances.size(), is(3));
 
@@ -113,8 +142,7 @@ public class ConnectorIaasClientTest {
 
         connectorIaasClient.runScriptOnInstance("infra123", "123456", "somescriptjason");
 
-        Mockito.verify(restClient).postToScriptsWebResource("infra123", "instanceId", "123456",
-                "somescriptjason");
+        Mockito.verify(restClient).postToScriptsWebResource("infra123", "instanceId", "123456", "somescriptjason");
 
     }
 
