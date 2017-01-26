@@ -95,8 +95,6 @@ configure(javaSubprojects) {
 
 
     dependencies {
-        compile files(org.gradle.internal.jvm.Jvm.current().toolsJar)
-
         compile 'log4j:log4j:1.2.17'
         compile 'com.google.guava:guava:19.0'
 
