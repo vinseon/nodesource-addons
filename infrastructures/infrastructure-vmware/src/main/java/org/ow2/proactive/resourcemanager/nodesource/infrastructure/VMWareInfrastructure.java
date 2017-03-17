@@ -172,7 +172,7 @@ public class VMWareInfrastructure extends InfrastructureManager {
             throw new IllegalArgumentException("The virtual machine username must be specified");
         }
 
-        if (parameters[8] == null) {
+        if (parameters[9] == null) {
             throw new IllegalArgumentException("The virtual machine password must be specified");
         }
 
