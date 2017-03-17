@@ -25,7 +25,6 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +52,35 @@ public class ConnectorIaasJSONTransformer {
         if (endpoint != null && !endpoint.isEmpty()) {
             infrastructure = infrastructure.put("endpoint", endpoint);
         }
+
+        return infrastructure.toString();
+    }
+
+    public static String getAzureInfrastructureJSON(String infrastructureId, String type, String clientId,
+            String secret, String domain, String subscriptionId, String authenticationEndpoint,
+            String managementEndpoint, String resourceManagerEndpoint, String graphEndpoint,
+            boolean toBeRemovedOnShutdown) {
+        JSONObject credentials = new JSONObject().put("username", clientId).put("password", secret).put("domain",
+                                                                                                        domain);
+        if (subscriptionId != null && !subscriptionId.isEmpty()) {
+            credentials.put("subscriptionId", subscriptionId);
+        }
+
+        JSONObject infrastructure = new JSONObject().put("id", infrastructureId).put("type", type).put("credentials",
+                                                                                                       credentials);
+        if (authenticationEndpoint != null && !authenticationEndpoint.isEmpty()) {
+            infrastructure.put("authenticationEndpoint", authenticationEndpoint);
+        }
+        if (managementEndpoint != null && !managementEndpoint.isEmpty()) {
+            infrastructure.put("managementEndpoint", managementEndpoint);
+        }
+        if (resourceManagerEndpoint != null && !resourceManagerEndpoint.isEmpty()) {
+            infrastructure.put("resourceManagerEndpoint", resourceManagerEndpoint);
+        }
+        if (graphEndpoint != null && !graphEndpoint.isEmpty()) {
+            infrastructure.put("graphEndpoint", graphEndpoint);
+        }
+        infrastructure.put("toBeRemovedOnShutdown", toBeRemovedOnShutdown);
 
         return infrastructure.toString();
     }
@@ -91,6 +119,52 @@ public class ConnectorIaasJSONTransformer {
                                .put("hardware", hardware)
                                .put("options", options)
                                .toString();
+    }
+
+    public static String getAzureInstanceJSON(String instanceTag, String image, String number, String username,
+            String password, String publickey, String vmSizeType, String resourceGroup, String region,
+            String privateNetworkCIDR, String staticPublicIP) {
+        JSONObject hardware = new JSONObject();
+        if (vmSizeType != null && !vmSizeType.isEmpty()) {
+            hardware.put("type", vmSizeType);
+        }
+
+        JSONObject credentials = new JSONObject();
+        if (username != null && !username.isEmpty()) {
+            credentials.put("username", username);
+        }
+        if (password != null && !password.isEmpty()) {
+            credentials.put("password", password);
+        }
+        if (publickey != null && !publickey.isEmpty()) {
+            credentials.put("publickey", publickey);
+        }
+
+        JSONObject options = new JSONObject();
+        if (resourceGroup != null && !resourceGroup.isEmpty()) {
+            options.put("resourceGroup", resourceGroup);
+        }
+        if (region != null && !region.isEmpty()) {
+            options.put("region", region);
+        }
+        if (privateNetworkCIDR != null && !privateNetworkCIDR.isEmpty()) {
+            options.put("privateNetworkCIDR", privateNetworkCIDR);
+        }
+        if (staticPublicIP != null && !staticPublicIP.isEmpty()) {
+            options.put("staticPublicIP", staticPublicIP);
+        }
+
+        JSONObject instance = new JSONObject().put("tag", instanceTag).put("image", image).put("number", number);
+        if (hardware.length() > 0) {
+            instance.put("hardware", hardware);
+        }
+        if (credentials.length() > 0) {
+            instance.put("credentials", credentials);
+        }
+        if (options.length() > 0) {
+            instance.put("options", options);
+        }
+        return instance.toString();
     }
 
     public static String getInstanceJSONWithPublicKeyAndScripts(String tag, String image, String number,
