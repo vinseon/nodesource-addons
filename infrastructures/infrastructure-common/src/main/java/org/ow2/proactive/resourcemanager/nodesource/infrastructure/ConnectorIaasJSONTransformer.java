@@ -137,7 +137,7 @@ public class ConnectorIaasJSONTransformer {
             credentials.put("password", password);
         }
         if (publickey != null && !publickey.isEmpty()) {
-            credentials.put("publickey", publickey);
+            credentials.put("publicKey", publickey);
         }
 
         JSONObject options = new JSONObject();
