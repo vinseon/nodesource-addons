@@ -130,7 +130,7 @@ public class ConnectorIaasController {
                                                                                 resourceGroup,
                                                                                 region,
                                                                                 privateNetworkCIDR,
-                                                                                Boolean.toString(staticPublicIP));
+                                                                                staticPublicIP);
 
         return createInstance(infrastructureId, instanceTag, instanceJson);
     }

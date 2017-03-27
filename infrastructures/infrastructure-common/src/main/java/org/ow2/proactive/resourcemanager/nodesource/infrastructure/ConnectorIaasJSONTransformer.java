@@ -123,7 +123,7 @@ public class ConnectorIaasJSONTransformer {
 
     public static String getAzureInstanceJSON(String instanceTag, String image, String number, String username,
             String password, String publickey, String vmSizeType, String resourceGroup, String region,
-            String privateNetworkCIDR, String staticPublicIP) {
+            String privateNetworkCIDR, boolean staticPublicIP) {
         JSONObject hardware = new JSONObject();
         if (vmSizeType != null && !vmSizeType.isEmpty()) {
             hardware.put("type", vmSizeType);
@@ -150,9 +150,7 @@ public class ConnectorIaasJSONTransformer {
         if (privateNetworkCIDR != null && !privateNetworkCIDR.isEmpty()) {
             options.put("privateNetworkCIDR", privateNetworkCIDR);
         }
-        if (staticPublicIP != null && !staticPublicIP.isEmpty()) {
-            options.put("staticPublicIP", staticPublicIP);
-        }
+        options.put("staticPublicIP", staticPublicIP);
 
         JSONObject instance = new JSONObject().put("tag", instanceTag).put("image", image).put("number", number);
         if (hardware.length() > 0) {
