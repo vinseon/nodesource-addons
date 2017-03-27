@@ -38,8 +38,8 @@ jar {
         attributes("Implementation-Title": "ProActive",
                 "Implementation-Version": version,
                 "Specification-Version": version,
-                "Implementation-Vendor": "Activeeon - OASIS - INRIA Sophia Antipolis",
-                "Implementation-URL": "http://proactive.inria.fr"
+                "Implementation-Vendor": "ActiveEon",
+                "Implementation-URL": "http://www.activeeon.com"
         )
     }
 }

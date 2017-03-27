@@ -29,12 +29,14 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -75,7 +77,7 @@ public class AzureInfrastructureTest {
     }
 
     @Test
-    public void testInitialParamateres() {
+    public void testDefaultValuesOfAllParameters() {
         assertThat(azureInfrastructure.clientId, is(nullValue()));
         assertThat(azureInfrastructure.secret, is(nullValue()));
         assertThat(azureInfrastructure.domain, is(nullValue()));
@@ -108,11 +110,55 @@ public class AzureInfrastructureTest {
         assertThat(azureInfrastructure.privateNetworkCIDR, is(nullValue()));
         assertThat(azureInfrastructure.staticPublicIP, is(true));
         assertThat(azureInfrastructure.additionalProperties, is("-Dproactive.useIPaddress=true"));
-
     }
 
     @Test
-    public void testConfigure() {
+    public void testConfigureDoNotThrowIllegalArgumentExceptionWithValidParameters() {
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        azureInfrastructure.nodeSource = nodeSource;
+
+        try {
+            azureInfrastructure.configure("clientId",
+                                          "secret",
+                                          "domain",
+                                          "subscriptionId",
+                                          "authenticationEndpoint",
+                                          "managementEndpoint",
+                                          "resourceManagerEndpoint",
+                                          "graphEndpoint",
+                                          "test.activeeon.com",
+                                          "http://localhost:8088/connector-iaas",
+                                          "image",
+                                          "Standard_D1_v2",
+                                          "vmUsername",
+                                          "vmPassword",
+                                          "vmPublicKey",
+                                          "resourceGroup",
+                                          "region",
+                                          "2",
+                                          "3",
+                                          "wget -nv test.activeeon.com/rest/node.jar",
+                                          "192.168.1.0/24",
+                                          true,
+                                          "-Dnew=value");
+            Assert.assertTrue(Boolean.TRUE);
+        } catch (IllegalArgumentException e) {
+            fail("NPE not thrown");
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void tesConfigureNotEnoughParameters() {
+
+        when(nodeSource.getName()).thenReturn("Node source Name");
+        azureInfrastructure.nodeSource = nodeSource;
+
+        azureInfrastructure.configure("clientId", "secret");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void tesConfigureWithANullArgument() {
+
         when(nodeSource.getName()).thenReturn("Node source Name");
         azureInfrastructure.nodeSource = nodeSource;
 
@@ -126,7 +172,7 @@ public class AzureInfrastructureTest {
                                       "graphEndpoint",
                                       "test.activeeon.com",
                                       "http://localhost:8088/connector-iaas",
-                                      "image",
+                                      null,
                                       "Standard_D1_v2",
                                       "vmUsername",
                                       "vmPassword",
@@ -141,17 +187,8 @@ public class AzureInfrastructureTest {
                                       "-Dnew=value");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void tesConfigureNotEnoughParameters() {
-
-        when(nodeSource.getName()).thenReturn("Node source Name");
-        azureInfrastructure.nodeSource = nodeSource;
-
-        azureInfrastructure.configure("clientId", "secret");
-    }
-
     @Test
-    public void testAcquireNode() {
+    public void testAcquiringTwoNodesByRegisteringInfrastructureCreatingInstancesAndInjectingScriptOnThem() {
 
         when(nodeSource.getName()).thenReturn("Node source Name");
         azureInfrastructure.nodeSource = nodeSource;
@@ -244,11 +281,6 @@ public class AzureInfrastructureTest {
     }
 
     @Test
-    public void testAcquireAllNodes() {
-        testAcquireNode();
-    }
-
-    @Test
     public void testRemoveNode() throws ProActiveException, RMException {
         when(nodeSource.getName()).thenReturn("Node source Name");
         azureInfrastructure.nodeSource = nodeSource;
@@ -300,7 +332,7 @@ public class AzureInfrastructureTest {
     }
 
     @Test
-    public void testNotifyAcquiredNode() throws ProActiveException, RMException {
+    public void testThatNotifyAcquiredNodeMethodFillsTheNodesMapCorrectly() throws ProActiveException, RMException {
 
         when(nodeSource.getName()).thenReturn("Node source Name");
         azureInfrastructure.nodeSource = nodeSource;
@@ -341,13 +373,5 @@ public class AzureInfrastructureTest {
         assertThat(azureInfrastructure.nodesPerInstances.get("123").isEmpty(), is(false));
         assertThat(azureInfrastructure.nodesPerInstances.get("123").size(), is(1));
         assertThat(azureInfrastructure.nodesPerInstances.get("123").contains("nodename"), is(true));
-
     }
-
-    @Test
-    public void testGetDescription() {
-        assertThat(azureInfrastructure.getDescription(),
-                   is("Handles nodes from the Amazon Elastic Compute Cloud Service."));
-    }
-
 }

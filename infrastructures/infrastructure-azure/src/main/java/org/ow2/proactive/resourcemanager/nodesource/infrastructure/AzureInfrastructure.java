@@ -27,8 +27,10 @@ package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -43,11 +45,96 @@ import com.google.common.collect.Maps;
 
 public class AzureInfrastructure extends InfrastructureManager {
 
+    private static final Logger LOGGER = Logger.getLogger(AzureInfrastructure.class);
+
     public static final String INSTANCE_ID_NODE_PROPERTY = "instanceId";
 
     public static final String INFRASTRUCTURE_TYPE = "azure";
 
-    private static final Logger logger = Logger.getLogger(AzureInfrastructure.class);
+    private static final String DEFAULT_RM_HOSTNAME = "localhost";
+
+    private final static int PARAMETERS_NUMBER = 23;
+
+    // Indexes of parameters
+    private final static int CLIENT_ID_INDEX = 0;
+
+    private final static int SECRET_INDEX = 1;
+
+    private final static int DOMAIN_INDEX = 2;
+
+    private final static int SUBSCRIPTION_ID_INDEX = 3;
+
+    private final static int AUTHENTICATION_ENDPOINT_INDEX = 4;
+
+    private final static int MANAGEMENT_ENDPOINT_INDEX = 5;
+
+    private final static int RESOURCE_MANAGER_ENDPOINT_INDEX = 6;
+
+    private final static int GRAPH_ENDPOINT_INDEX = 7;
+
+    private final static int RM_HOSTNAME_INDEX = 8;
+
+    private final static int CONNECTOR_IAAS_URL_INDEX = 9;
+
+    private final static int IMAGE_INDEX = 10;
+
+    private final static int VM_SIZE_TYPE_INDEX = 11;
+
+    private final static int VM_USERNAME_INDEX = 12;
+
+    private final static int VM_PASSWORD_INDEX = 13;
+
+    private final static int VM_PUBLIC_KEY_INDEX = 14;
+
+    private final static int RESOURCE_GROUP_INDEX = 15;
+
+    private final static int REGION_INDEX = 16;
+
+    private final static int NUMBER_OF_INSTANCES_INDEX = 17;
+
+    private final static int NUMBER_OF_NODES_PER_INSTANCE_INDEX = 18;
+
+    private final static int DOWNLOAD_COMMAND_INDEX = 19;
+
+    private final static int PRIVATE_NETWORK_CIDR_INDEX = 20;
+
+    private final static int STATIC_PUBLIC_IP_INDEX = 21;
+
+    private final static int ADDITIONAL_PROPERTIES_INDEX = 22;
+
+    // Command lines patterns
+    private static final CharSequence RM_HOSTNAME_PATTERN = "<RM_HOSTNAME>";
+
+    private static final CharSequence RM_URL_PATTERN = "<RM_URL>";
+
+    private static final CharSequence COMMUNICATION_PROTOCOL_PATTERN = "<COMMUNICATION_PROTOCOL>";
+
+    private static final CharSequence INSTANCE_ID_PATTERN = "<INSTANCE_ID>";
+
+    private static final CharSequence ADDITIONAL_PROPERTIES_PATTERN = "<ADDITIONAL_PROPERTIES>";
+
+    private static final CharSequence NODESOURCE_NAME_PATTERN = "<NODESOURCE_NAME>";
+
+    private static final CharSequence NUMBER_OF_NODES_PATTERN = "<NUMBER_OF_NODES>";
+
+    // Command lines definition
+    private static final String POWERSHELL_DOWNLOAD_CMD = "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
+                                                          RM_HOSTNAME_PATTERN + ":8080/rest/node.jar" +
+                                                          "', 'node.jar') }\"";
+
+    private static final String WGET_DOWNLOAD_CMD = "wget -nv http://" + RM_HOSTNAME_PATTERN + ":8080/rest/node.jar";
+
+    private static final String START_NODE_CMD = "java -jar node.jar -Dproactive.communication.protocol=" +
+                                                 COMMUNICATION_PROTOCOL_PATTERN + " -Dproactive.pamr.router.address=" +
+                                                 RM_HOSTNAME_PATTERN + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
+                                                 INSTANCE_ID_PATTERN + " " + ADDITIONAL_PROPERTIES_PATTERN + " -r " +
+                                                 RM_URL_PATTERN + " -s " + NODESOURCE_NAME_PATTERN + " -w " +
+                                                 NUMBER_OF_NODES_PATTERN;
+
+    private static final String START_NODE_FALLBACK_CMD = "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
+                                                          INSTANCE_ID_PATTERN + " " + ADDITIONAL_PROPERTIES_PATTERN +
+                                                          " -r " + RM_URL_PATTERN + " -s " + NODESOURCE_NAME_PATTERN +
+                                                          " -w " + NUMBER_OF_NODES_PATTERN;
 
     @Configurable(description = "The Azure clientId")
     protected String clientId = null;
@@ -132,88 +219,72 @@ public class AzureInfrastructure extends InfrastructureManager {
     @Override
     public void configure(Object... parameters) {
 
-        logger.info("Validating parameters : " + parameters);
+        LOGGER.info("Validating parameters : " + Arrays.toString(parameters));
         validate(parameters);
 
-        this.clientId = parameters[0].toString().trim();
-        this.secret = parameters[1].toString().trim();
-        this.domain = parameters[2].toString().trim();
-        this.subscriptionId = parameters[3].toString().trim();
-        this.authenticationEndpoint = parameters[4].toString().trim();
-        this.managementEndpoint = parameters[5].toString().trim();
-        this.resourceManagerEndpoint = parameters[6].toString().trim();
-        this.graphEndpoint = parameters[7].toString().trim();
-        this.rmHostname = parameters[8].toString().trim();
-        this.connectorIaasURL = parameters[9].toString().trim();
-        this.image = parameters[10].toString().trim();
-        this.vmSizeType = parameters[11].toString().trim();
-        this.vmUsername = parameters[12].toString().trim();
-        this.vmPassword = parameters[13].toString().trim();
-        this.vmPublicKey = parameters[14].toString().trim();
-        this.resourceGroup = parameters[15].toString().trim();
-        this.region = parameters[16].toString().trim();
-        this.numberOfInstances = Integer.parseInt(parameters[17].toString().trim());
-        this.numberOfNodesPerInstance = Integer.parseInt(parameters[18].toString().trim());
-        this.downloadCommand = parameters[19].toString().trim();
-        this.privateNetworkCIDR = parameters[20].toString().trim();
-        this.staticPublicIP = Boolean.parseBoolean(parameters[21].toString().trim());
-        this.additionalProperties = parameters[22].toString().trim();
+        this.clientId = getParameter(parameters, CLIENT_ID_INDEX);
+        this.secret = getParameter(parameters, SECRET_INDEX);
+        this.domain = getParameter(parameters, DOMAIN_INDEX);
+        this.subscriptionId = getParameter(parameters, SUBSCRIPTION_ID_INDEX);
+        this.authenticationEndpoint = getParameter(parameters, AUTHENTICATION_ENDPOINT_INDEX);
+        this.managementEndpoint = getParameter(parameters, MANAGEMENT_ENDPOINT_INDEX);
+        this.resourceManagerEndpoint = getParameter(parameters, RESOURCE_MANAGER_ENDPOINT_INDEX);
+        this.graphEndpoint = getParameter(parameters, GRAPH_ENDPOINT_INDEX);
+        this.rmHostname = getParameter(parameters, RM_HOSTNAME_INDEX);
+        this.connectorIaasURL = getParameter(parameters, CONNECTOR_IAAS_URL_INDEX);
+        this.image = getParameter(parameters, IMAGE_INDEX);
+        this.vmSizeType = getParameter(parameters, VM_SIZE_TYPE_INDEX);
+        this.vmUsername = getParameter(parameters, VM_USERNAME_INDEX);
+        this.vmPassword = getParameter(parameters, VM_PASSWORD_INDEX);
+        this.vmPublicKey = getParameter(parameters, VM_PUBLIC_KEY_INDEX);
+        this.resourceGroup = getParameter(parameters, RESOURCE_GROUP_INDEX);
+        this.region = getParameter(parameters, REGION_INDEX);
+        this.numberOfInstances = Integer.parseInt(getParameter(parameters, NUMBER_OF_INSTANCES_INDEX));
+        this.numberOfNodesPerInstance = Integer.parseInt(getParameter(parameters, NUMBER_OF_NODES_PER_INSTANCE_INDEX));
+        this.downloadCommand = getParameter(parameters, DOWNLOAD_COMMAND_INDEX);
+        this.privateNetworkCIDR = getParameter(parameters, PRIVATE_NETWORK_CIDR_INDEX);
+        this.staticPublicIP = Boolean.parseBoolean(getParameter(parameters, STATIC_PUBLIC_IP_INDEX));
+        this.additionalProperties = getParameter(parameters, ADDITIONAL_PROPERTIES_INDEX);
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
+    }
 
+    private String getParameter(Object[] parameters, int index) {
+        return parameters[index].toString().trim();
     }
 
     private void validate(Object[] parameters) {
-        if (parameters == null || parameters.length < 23) {
+        if (parameters == null || parameters.length < PARAMETERS_NUMBER) {
             throw new IllegalArgumentException("Invalid parameters for AzureInfrastructure creation");
         }
 
-        if (parameters[0] == null) {
-            throw new IllegalArgumentException("Azure clientId must be specified");
-        }
+        throwIllegalArgumentExceptionIfNull(parameters[CLIENT_ID_INDEX], "Azure clientId must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[SECRET_INDEX], "Azure secret key must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[DOMAIN_INDEX], "Azure domain or tenantId must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[RM_HOSTNAME_INDEX],
+                                            "The Resource manager hostname must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[CONNECTOR_IAAS_URL_INDEX],
+                                            "The connector-iaas URL must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[IMAGE_INDEX], "The image id must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[VM_USERNAME_INDEX],
+                                            "The virtual machine username must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[VM_PASSWORD_INDEX],
+                                            "The virtual machine password must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[NUMBER_OF_INSTANCES_INDEX],
+                                            "The number of instances to create must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[NUMBER_OF_NODES_PER_INSTANCE_INDEX],
+                                            "The number of nodes per instance to deploy must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[DOWNLOAD_COMMAND_INDEX],
+                                            "The download node.jar command must be specified");
 
-        if (parameters[1] == null) {
-            throw new IllegalArgumentException("Azure secret key must be specified");
+        if (parameters[ADDITIONAL_PROPERTIES_INDEX] == null) {
+            parameters[ADDITIONAL_PROPERTIES_INDEX] = "";
         }
+    }
 
-        if (parameters[2] == null) {
-            throw new IllegalArgumentException("Azure domain or tenantId must be specified");
-        }
-
-        if (parameters[8] == null) {
-            throw new IllegalArgumentException("The Resource manager hostname must be specified");
-        }
-
-        if (parameters[9] == null) {
-            throw new IllegalArgumentException("The connector-iaas URL must be specified");
-        }
-
-        if (parameters[10] == null) {
-            throw new IllegalArgumentException("The image id must be specified");
-        }
-
-        if (parameters[12] == null) {
-            throw new IllegalArgumentException("The virtual machine username must be specified");
-        }
-
-        if (parameters[13] == null) {
-            throw new IllegalArgumentException("The virtual machine password must be specified");
-        }
-
-        if (parameters[17] == null) {
-            throw new IllegalArgumentException("The number of instances to create must be specified");
-        }
-
-        if (parameters[18] == null) {
-            throw new IllegalArgumentException("The number of nodes per instance to deploy must be specified");
-        }
-
-        if (parameters[19] == null) {
-            throw new IllegalArgumentException("The download node.jar command must be specified");
-        }
-
-        if (parameters[22] == null) {
-            parameters[22] = "";
+    private void throwIllegalArgumentExceptionIfNull(Object parameter, String error) {
+        if (parameter == null) {
+            throw new IllegalArgumentException(error);
         }
     }
 
@@ -248,15 +319,8 @@ public class AzureInfrastructure extends InfrastructureManager {
                                                                     privateNetworkCIDR,
                                                                     staticPublicIP);
 
-        logger.info("Instances ids created : " + instancesIds);
+        LOGGER.info("Instances ids created : " + instancesIds);
 
-        /*
-         * TODO: could be injected on boot just like OpenStack BUT scripts need to be customized
-         * with instanceTag/id
-         * and therefore we need to create the VMs one by one so the parallel instances creation
-         * feature from Azure
-         * will be lost.
-         */
         for (String instanceId : instancesIds) {
 
             String fullScript = "-c '" + this.downloadCommand + ";nohup " +
@@ -285,17 +349,17 @@ public class AzureInfrastructure extends InfrastructureManager {
             node.getProActiveRuntime().killNode(node.getNodeInformation().getName());
 
         } catch (Exception e) {
-            logger.warn(e);
+            LOGGER.warn("Unable to remove the node '" + node.getNodeInformation().getName() + "' with error: " + e);
         }
 
         synchronized (this) {
             nodesPerInstances.get(instanceId).remove(node.getNodeInformation().getName());
-            logger.info("Removed node : " + node.getNodeInformation().getName());
+            LOGGER.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
                 connectorIaasController.terminateInstance(getInfrastructureId(), instanceId);
                 nodesPerInstances.remove(instanceId);
-                logger.info("Removed instance : " + instanceId);
+                LOGGER.info("Removed instance : " + instanceId);
             }
         }
     }
@@ -315,7 +379,7 @@ public class AzureInfrastructure extends InfrastructureManager {
 
     @Override
     public String getDescription() {
-        return "Handles nodes from the Amazon Elastic Compute Cloud Service.";
+        return "Handles nodes from Microsoft Azure.";
     }
 
     /**
@@ -331,33 +395,36 @@ public class AzureInfrastructure extends InfrastructureManager {
             // best effort, may not work for all machines
             return InetAddress.getLocalHost().getCanonicalHostName();
         } catch (UnknownHostException e) {
-            logger.warn(e);
-            return "localhost";
+            LOGGER.warn("Unable to retrieve local canonical hostname with error: " + e);
+            return DEFAULT_RM_HOSTNAME;
         }
     }
 
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
-            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" + this.rmHostname +
-                   ":8080/rest/node.jar" + "', 'node.jar') }\"";
+            return POWERSHELL_DOWNLOAD_CMD.replace(RM_HOSTNAME_PATTERN, this.rmHostname);
         } else {
-            return "wget -nv http://" + this.rmHostname + ":8080/rest/node.jar";
+            return WGET_DOWNLOAD_CMD.replace(RM_HOSTNAME_PATTERN, this.rmHostname);
         }
     }
 
     private String generateDefaultStartNodeCommand(String instanceId) {
         try {
-            String rmUrlToUse = rmUrl;
-
-            String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
-            return "java -jar node.jar -Dproactive.communication.protocol=" + protocol +
-                   " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
-                   instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName() +
-                   " -w " + numberOfNodesPerInstance;
+            String communicationProtocol = rmUrl.split(":")[0];
+            return START_NODE_CMD.replace(COMMUNICATION_PROTOCOL_PATTERN, communicationProtocol)
+                                 .replace(RM_HOSTNAME_PATTERN, rmHostname)
+                                 .replace(INSTANCE_ID_PATTERN, instanceId)
+                                 .replace(ADDITIONAL_PROPERTIES_PATTERN, additionalProperties)
+                                 .replace(RM_URL_PATTERN, rmUrl)
+                                 .replace(NODESOURCE_NAME_PATTERN, nodeSource.getName())
+                                 .replace(NUMBER_OF_NODES_PATTERN, String.valueOf(numberOfNodesPerInstance));
         } catch (Exception e) {
-            logger.error("Exception when generating the command, fallback on default value", e);
-            return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " + additionalProperties +
-                   " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+            LOGGER.error("Exception when generating the command, fallback on default value", e);
+            return START_NODE_FALLBACK_CMD.replace(INSTANCE_ID_PATTERN, instanceId)
+                                          .replace(ADDITIONAL_PROPERTIES_PATTERN, additionalProperties)
+                                          .replace(RM_URL_PATTERN, rmUrl)
+                                          .replace(NODESOURCE_NAME_PATTERN, nodeSource.getName())
+                                          .replace(NUMBER_OF_NODES_PATTERN, String.valueOf(numberOfNodesPerInstance));
         }
     }
 
