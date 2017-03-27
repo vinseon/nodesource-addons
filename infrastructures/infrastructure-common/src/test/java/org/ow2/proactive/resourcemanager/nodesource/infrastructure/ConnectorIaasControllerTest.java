@@ -127,10 +127,10 @@ public class ConnectorIaasControllerTest {
 
         Set<String> instanceIds = Sets.newHashSet("123", "456");
 
-        when(connectorIaasClient.createInstancesIfNotExisist(anyString(),
-                                                             anyString(),
-                                                             anyString(),
-                                                             anySet())).thenReturn(instanceIds);
+        when(connectorIaasClient.createInstancesIfNotExist(anyString(),
+                                                           anyString(),
+                                                           anyString(),
+                                                           anySet())).thenReturn(instanceIds);
 
         Set<JSONObject> existingInstances = Sets.newHashSet();
 
@@ -150,10 +150,10 @@ public class ConnectorIaasControllerTest {
         assertThat(instancesIds.size(), is(2));
         assertThat(instancesIds.containsAll(instanceIds), is(true));
 
-        verify(connectorIaasClient).createInstancesIfNotExisist("node_source_name",
-                                                                "node_source_name",
-                                                                instanceJson,
-                                                                existingInstances);
+        verify(connectorIaasClient).createInstancesIfNotExist("node_source_name",
+                                                              "node_source_name",
+                                                              instanceJson,
+                                                              existingInstances);
 
     }
 
@@ -172,10 +172,10 @@ public class ConnectorIaasControllerTest {
 
         Set<String> instanceIds = Sets.newHashSet("123", "456");
 
-        when(connectorIaasClient.createInstancesIfNotExisist(anyString(),
-                                                             anyString(),
-                                                             anyString(),
-                                                             anySet())).thenReturn(instanceIds);
+        when(connectorIaasClient.createInstancesIfNotExist(anyString(),
+                                                           anyString(),
+                                                           anyString(),
+                                                           anySet())).thenReturn(instanceIds);
 
         Set<JSONObject> existingInstances = Sets.newHashSet();
 
@@ -192,10 +192,10 @@ public class ConnectorIaasControllerTest {
         assertThat(instancesIds.size(), is(2));
         assertThat(instancesIds.containsAll(instanceIds), is(true));
 
-        verify(connectorIaasClient).createInstancesIfNotExisist("node_source_name",
-                                                                "node_source_name",
-                                                                instanceJson,
-                                                                existingInstances);
+        verify(connectorIaasClient).createInstancesIfNotExist("node_source_name",
+                                                              "node_source_name",
+                                                              instanceJson,
+                                                              existingInstances);
 
     }
 
@@ -214,10 +214,10 @@ public class ConnectorIaasControllerTest {
 
         Set<String> instanceIds = Sets.newHashSet("123", "456");
 
-        when(connectorIaasClient.createInstancesIfNotExisist(anyString(),
-                                                             anyString(),
-                                                             anyString(),
-                                                             anySet())).thenReturn(instanceIds);
+        when(connectorIaasClient.createInstancesIfNotExist(anyString(),
+                                                           anyString(),
+                                                           anyString(),
+                                                           anySet())).thenReturn(instanceIds);
 
         Set<JSONObject> existingInstances = Sets.newHashSet(new JSONObject());
 
@@ -233,10 +233,10 @@ public class ConnectorIaasControllerTest {
         assertThat(instancesIds.size(), is(2));
         assertThat(instancesIds.containsAll(instanceIds), is(true));
 
-        verify(connectorIaasClient).createInstancesIfNotExisist("node_source_name",
-                                                                "node_source_name",
-                                                                instanceJson,
-                                                                existingInstances);
+        verify(connectorIaasClient).createInstancesIfNotExist("node_source_name",
+                                                              "node_source_name",
+                                                              instanceJson,
+                                                              existingInstances);
 
     }
 

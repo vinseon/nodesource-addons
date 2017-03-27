@@ -202,10 +202,10 @@ public class ConnectorIaasController {
 
         logger.info("InstanceJson : " + instanceJson);
 
-        Set<String> instancesIds = connectorIaasClient.createInstancesIfNotExisist(infrastructureId,
-                                                                                   instanceTag,
-                                                                                   instanceJson,
-                                                                                   existingInstancesByInfrastructureId);
+        Set<String> instancesIds = connectorIaasClient.createInstancesIfNotExist(infrastructureId,
+                                                                                 instanceTag,
+                                                                                 instanceJson,
+                                                                                 existingInstancesByInfrastructureId);
 
         logger.info("Instances ids created : " + instancesIds);
 
