@@ -323,14 +323,9 @@ public class AzureInfrastructure extends InfrastructureManager {
 
         for (String instanceId : instancesIds) {
 
-            String fullScript = "-c '" + this.downloadCommand + ";nohup " +
-                                generateDefaultStartNodeCommand(instanceId) + "  &'";
+            String fullScript = this.downloadCommand + ";nohup " + generateDefaultStartNodeCommand(instanceId) + " &";
 
-            connectorIaasController.executeScriptWithCredentials(getInfrastructureId(),
-                                                                 instanceId,
-                                                                 Lists.newArrayList(fullScript),
-                                                                 vmUsername,
-                                                                 vmPassword);
+            connectorIaasController.executeScript(getInfrastructureId(), instanceId, Lists.newArrayList(fullScript));
         }
 
     }

@@ -273,11 +273,7 @@ public class AzureInfrastructureTest {
                                                              "192.168.1.0/24",
                                                              true);
 
-        verify(connectorIaasController, times(2)).executeScriptWithCredentials(anyString(),
-                                                                               anyString(),
-                                                                               anyList(),
-                                                                               anyString(),
-                                                                               anyString());
+        verify(connectorIaasController, times(2)).executeScript(anyString(), anyString(), anyList());
     }
 
     @Test
