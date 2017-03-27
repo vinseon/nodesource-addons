@@ -90,7 +90,7 @@ public class ConnectorIaasClient {
         return restClient.postToInfrastructuresWebResource(infrastructureJson);
     }
 
-    public Set<String> createInstancesIfNotExisist(String infrastructureId, String instanceTag, String instanceJson,
+    public Set<String> createInstancesIfNotExist(String infrastructureId, String instanceTag, String instanceJson,
             Set<JSONObject> existingInstances) {
         Set<String> instancesIds = getExistingInstanceIds(instanceTag, existingInstances);
 

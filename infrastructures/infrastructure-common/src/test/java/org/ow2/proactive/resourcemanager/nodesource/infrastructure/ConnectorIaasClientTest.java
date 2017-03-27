@@ -78,10 +78,10 @@ public class ConnectorIaasClientTest {
         Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\",tag=\"instanceTag123\"}"))
                .thenReturn("[{'id' : 'instance123'}]");
 
-        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123",
-                                                                                "instanceTag123",
-                                                                                "{id=\"123\",tag=\"instanceTag123\"}",
-                                                                                Sets.<JSONObject> newHashSet());
+        Set<String> instances = connectorIaasClient.createInstancesIfNotExist("infra123",
+                                                                              "instanceTag123",
+                                                                              "{id=\"123\",tag=\"instanceTag123\"}",
+                                                                              Sets.<JSONObject> newHashSet());
 
         assertThat(instances.size(), is(1));
 
@@ -95,10 +95,10 @@ public class ConnectorIaasClientTest {
         Mockito.when(restClient.postToInstancesWebResource("infra123", "{id=\"123\",tag=\"instanceTag123\"}"))
                .thenReturn("[{'id' : 'instance123'},{'id' : 'instance456'},{'id' : 'instance789'}]");
 
-        Set<String> instances = connectorIaasClient.createInstancesIfNotExisist("infra123",
-                                                                                "instanceTag123",
-                                                                                "{id=\"123\",tag=\"instanceTag123\"}",
-                                                                                Sets.<JSONObject> newHashSet());
+        Set<String> instances = connectorIaasClient.createInstancesIfNotExist("infra123",
+                                                                              "instanceTag123",
+                                                                              "{id=\"123\",tag=\"instanceTag123\"}",
+                                                                              Sets.<JSONObject> newHashSet());
 
         assertThat(instances.size(), is(3));
 

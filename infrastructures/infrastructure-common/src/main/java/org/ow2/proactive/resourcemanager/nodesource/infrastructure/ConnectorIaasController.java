@@ -75,21 +75,29 @@ public class ConnectorIaasController {
         return infrastructureId;
     }
 
-    public Set<String> createInstancesWithOptions(String infrastructureId, String instanceTag, String image,
-            int numberOfInstances, int cores, int ram, String spotPrice, String securityGroupNames, String subnetId,
-            String macAddresses) {
+    public String createAzureInfrastructure(String infrastructureId, String clientId, String secret, String domain,
+            String subscriptionId, String authenticationEndpoint, String managementEndpoint,
+            String resourceManagerEndpoint, String graphEndpoint, boolean destroyOnShutdown) {
 
-        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag,
-                                                                           image,
-                                                                           "" + numberOfInstances,
-                                                                           "" + cores,
-                                                                           "" + ram,
-                                                                           spotPrice,
-                                                                           securityGroupNames,
-                                                                           subnetId,
-                                                                           macAddresses);
+        String infrastructureJson = ConnectorIaasJSONTransformer.getAzureInfrastructureJSON(infrastructureId,
+                                                                                            infrastructureType,
+                                                                                            clientId,
+                                                                                            secret,
+                                                                                            domain,
+                                                                                            subscriptionId,
+                                                                                            authenticationEndpoint,
+                                                                                            managementEndpoint,
+                                                                                            resourceManagerEndpoint,
+                                                                                            graphEndpoint,
+                                                                                            destroyOnShutdown);
 
-        return createInstance(infrastructureId, instanceTag, instanceJson);
+        logger.info("Creating Azure infrastructure : " + infrastructureJson);
+
+        connectorIaasClient.createInfrastructure(infrastructureId, infrastructureJson);
+
+        logger.info("Azure infrastructure created");
+
+        return infrastructureId;
     }
 
     public Set<String> createInstances(String infrastructureId, String instanceTag, String image, int numberOfInstances,
@@ -104,6 +112,42 @@ public class ConnectorIaasController {
                                                                            null,
                                                                            null,
                                                                            null);
+
+        return createInstance(infrastructureId, instanceTag, instanceJson);
+    }
+
+    public Set<String> createAzureInstances(String infrastructureId, String instanceTag, String image,
+            int numberOfInstances, String username, String password, String publicKey, String vmSizeType,
+            String resourceGroup, String region, String privateNetworkCIDR, boolean staticPublicIP) {
+
+        String instanceJson = ConnectorIaasJSONTransformer.getAzureInstanceJSON(instanceTag,
+                                                                                image,
+                                                                                "" + numberOfInstances,
+                                                                                username,
+                                                                                password,
+                                                                                publicKey,
+                                                                                vmSizeType,
+                                                                                resourceGroup,
+                                                                                region,
+                                                                                privateNetworkCIDR,
+                                                                                staticPublicIP);
+
+        return createInstance(infrastructureId, instanceTag, instanceJson);
+    }
+
+    public Set<String> createInstancesWithOptions(String infrastructureId, String instanceTag, String image,
+            int numberOfInstances, int cores, int ram, String spotPrice, String securityGroupNames, String subnetId,
+            String macAddresses) {
+
+        String instanceJson = ConnectorIaasJSONTransformer.getInstanceJSON(instanceTag,
+                                                                           image,
+                                                                           "" + numberOfInstances,
+                                                                           "" + cores,
+                                                                           "" + ram,
+                                                                           spotPrice,
+                                                                           securityGroupNames,
+                                                                           subnetId,
+                                                                           macAddresses);
 
         return createInstance(infrastructureId, instanceTag, instanceJson);
     }
@@ -158,10 +202,10 @@ public class ConnectorIaasController {
 
         logger.info("InstanceJson : " + instanceJson);
 
-        Set<String> instancesIds = connectorIaasClient.createInstancesIfNotExisist(infrastructureId,
-                                                                                   instanceTag,
-                                                                                   instanceJson,
-                                                                                   existingInstancesByInfrastructureId);
+        Set<String> instancesIds = connectorIaasClient.createInstancesIfNotExist(infrastructureId,
+                                                                                 instanceTag,
+                                                                                 instanceJson,
+                                                                                 existingInstancesByInfrastructureId);
 
         logger.info("Instances ids created : " + instancesIds);
 
