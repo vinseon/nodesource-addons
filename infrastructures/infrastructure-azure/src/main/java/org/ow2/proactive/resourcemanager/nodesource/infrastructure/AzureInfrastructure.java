@@ -144,7 +144,7 @@ public class AzureInfrastructure extends InfrastructureManager {
     @Configurable(description = "The Azure domain or tenantId")
     protected String domain = null;
 
-    @Configurable(description = "The Azure subscriptionId to use (if not specified, it will try to use the default one")
+    @Configurable(description = "The Azure subscriptionId to use (if not specified, it will try to use the default one)")
     protected String subscriptionId = null;
 
     @Configurable(description = "Optional authentication endpoint from specific Azure environment")
@@ -168,7 +168,7 @@ public class AzureInfrastructure extends InfrastructureManager {
     @Configurable(description = "Image (name or key)")
     protected String image = null;
 
-    @Configurable(description = "Azure virtual machine size type (by default: 'Standard_D1_v2'")
+    @Configurable(description = "Azure virtual machine size type (by default: 'Standard_D1_v2')")
     protected String vmSizeType = null;
 
     @Configurable(description = "The virtual machine Username")
@@ -180,10 +180,10 @@ public class AzureInfrastructure extends InfrastructureManager {
     @Configurable(description = "A public key to allow SSH connection to the VM")
     protected String vmPublicKey = null;
 
-    @Configurable(description = "The Azure resourceGroup to use (if not specified, the one from the image will be used")
+    @Configurable(description = "The Azure resourceGroup to use (if not specified, the one from the image will be used)")
     protected String resourceGroup = null;
 
-    @Configurable(description = "The Azure Region to use (if not specified, the one from the image will be used")
+    @Configurable(description = "The Azure Region to use (if not specified, the one from the image will be used)")
     protected String region = null;
 
     @Configurable(description = "Total instance to create")
