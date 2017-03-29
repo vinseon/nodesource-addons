@@ -322,8 +322,7 @@ public class AzureInfrastructure extends InfrastructureManager {
 
         for (String instanceId : instancesIds) {
 
-            String fullScript = this.downloadCommand + ";nohup " + generateDefaultStartNodeCommand(instanceId) + " &";
-
+            String fullScript = generateScriptFromInstanceId(instanceId);
             connectorIaasController.executeScript(getInfrastructureId(), instanceId, Lists.newArrayList(fullScript));
         }
 
@@ -394,6 +393,15 @@ public class AzureInfrastructure extends InfrastructureManager {
         }
     }
 
+    private String generateScriptFromInstanceId(String instanceId) {
+        String startNodeCommand = generateStartNodeCommand(instanceId);
+        if (System.getProperty("os.name").contains("Windows")) {
+            return this.downloadCommand + "; Start-Process -NoNewWindow " + startNodeCommand;
+        } else {
+            return "/bin/bash -c '" + this.downloadCommand + "; nohup " + startNodeCommand + " &'";
+        }
+    }
+
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
             return POWERSHELL_DOWNLOAD_CMD.replace(RM_HOSTNAME_PATTERN, this.rmHostname);
@@ -402,7 +410,7 @@ public class AzureInfrastructure extends InfrastructureManager {
         }
     }
 
-    private String generateDefaultStartNodeCommand(String instanceId) {
+    private String generateStartNodeCommand(String instanceId) {
         try {
             String communicationProtocol = rmUrl.split(":")[0];
             return START_NODE_CMD.replace(COMMUNICATION_PROTOCOL_PATTERN, communicationProtocol)
