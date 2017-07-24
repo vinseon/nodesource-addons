@@ -7,5 +7,6 @@
 2) Build shadowJar with ./gradlew shadowJar
 
 ## How to install
-1) Copy .jar file from build/libs into ProACtive Workflows and Scheduling Addons folder
+For example for the AWS EC2 infrastructure:
+1) Copy .jar file from infrastructures/infrastructure-aws-ec2/build/libs into ProACtive Workflows and Scheduling Addons folder
 2) Add 'org.ow2.proactive.resourcemanager.nodesource.infrastructure.AWSEC2Infrastructure' to [ProActive_Home]config/rm/nodesource/infrastructures
