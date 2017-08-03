@@ -25,19 +25,21 @@
  */
 package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.apache.log4j.Logger;
 import org.objectweb.proactive.core.ProActiveException;
 import org.objectweb.proactive.core.node.Node;
 import org.ow2.proactive.resourcemanager.exception.RMException;
 import org.ow2.proactive.resourcemanager.nodesource.common.Configurable;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 
 /**
  * @author Vincent Kherbache
@@ -93,7 +95,6 @@ public class MaasInfrastructure extends InfrastructureManager {
     protected ConnectorIaasController connectorIaasController = null;
 
     protected final Map<String, Set<String>> nodesPerInstances;
-
 
     /**
      * Default constructor
@@ -159,8 +160,7 @@ public class MaasInfrastructure extends InfrastructureManager {
         }
 
         if (parameters[7] == null) {
-            throw new IllegalArgumentException(
-                    "The number of nodes per instance to deploy must be specified");
+            throw new IllegalArgumentException("The number of nodes per instance to deploy must be specified");
         }
 
         if (parameters[8] == null) {
@@ -193,22 +193,23 @@ public class MaasInfrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        connectorIaasController.createInfrastructure(getInfrastructureId(), "", token, endpoint,
-                false);
+        connectorIaasController.createInfrastructure(getInfrastructureId(), "", token, endpoint, false);
 
         String instanceId = getInfrastructureId();
 
         // Upload commissioning script first
-        String fullScript = "-c '" + this.downloadCommand + ";nohup " +
-                generateDefaultStartNodeCommand(instanceId) + "  &'";
+        String fullScript = "-c '" + this.downloadCommand + ";nohup " + generateDefaultStartNodeCommand(instanceId) +
+                            "  &'";
         connectorIaasController.executeScript(getInfrastructureId(), instanceId, Lists.newArrayList(fullScript));
 
-        /* TODO: need modifications on ConnectorIaasController side to pass all desired options
-        Set<String> instancesIds;
-        instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(), instanceTag, image,
-                    numberOfInstances, cores, ram, null, null, null, macAddresses);
-        logger.info("Instances ids created : " + instancesIds);
-        */
+        /*
+         * TODO: need modifications on ConnectorIaasController side to pass all desired options
+         * Set<String> instancesIds;
+         * instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(),
+         * instanceTag, image,
+         * numberOfInstances, cores, ram, null, null, null, macAddresses);
+         * logger.info("Instances ids created : " + instancesIds);
+         */
     }
 
     @Override
@@ -279,7 +280,7 @@ public class MaasInfrastructure extends InfrastructureManager {
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
             return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmHostname +
-                    ":8080/rest/node.jar" + "', 'node.jar') }\"";
+                   ":8080/rest/node.jar" + "', 'node.jar') }\"";
         } else {
             return "wget -nv " + this.rmHostname + ":8080/rest/node.jar";
         }
@@ -291,14 +292,13 @@ public class MaasInfrastructure extends InfrastructureManager {
 
             String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
             return "java -jar node.jar -Dproactive.communication.protocol=" + protocol +
-                    " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
-                    instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " +
-                    nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+                   " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
+                   instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName() +
+                   " -w " + numberOfNodesPerInstance;
         } catch (Exception e) {
             logger.error("Exception when generating the command, fallback on default value", e);
-            return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " +
-                    additionalProperties + " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " +
-                    numberOfNodesPerInstance;
+            return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " + additionalProperties +
+                   " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
         }
     }
 
