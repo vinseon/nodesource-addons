@@ -27,6 +27,7 @@ package org.ow2.proactive.resourcemanager.nodesource.infrastructure;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,20 +42,81 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 
-/**
- * @author Vincent Kherbache
- * @since 09/01/17
- */
 public class MaasInfrastructure extends InfrastructureManager {
+
+    private static final Logger LOGGER = Logger.getLogger(MaasInfrastructure.class);
 
     public static final String INSTANCE_ID_NODE_PROPERTY = "instanceId";
 
     public static final String INFRASTRUCTURE_TYPE = "maas";
 
-    private static final Logger logger = Logger.getLogger(MaasInfrastructure.class);
+    private static final String DEFAULT_RM_HOSTNAME = "localhost";
+
+    private final static int PARAMETERS_NUMBER = 13;
+
+    // Indexes of parameters
+    private final static int API_TOKEN_INDEX = 0;
+
+    private final static int ENDPOINT_INDEX = 1;
+
+    private final static int RM_HOSTNAME_INDEX = 2;
+
+    private final static int CONNECTOR_IAAS_URL_INDEX = 3;
+
+    private final static int IMAGE_INDEX = 4;
+
+    private final static int SYSTEM_ID_INDEX = 5;
+
+    private final static int MIN_CPU_INDEX = 6;
+
+    private final static int MIN_MEM_INDEX = 7;
+
+    private final static int NUMBER_OF_INSTANCES_INDEX = 8;
+
+    private final static int NUMBER_OF_NODES_PER_INSTANCE_INDEX = 9;
+
+    private final static int DOWNLOAD_COMMAND_INDEX = 10;
+
+    private final static int IGNORE_CERTIFICATE_CHECK_INDEX = 11;
+
+    private final static int ADDITIONAL_PROPERTIES_INDEX = 12;
+
+    // Command lines patterns
+    private static final CharSequence RM_HOSTNAME_PATTERN = "<RM_HOSTNAME>";
+
+    private static final CharSequence RM_URL_PATTERN = "<RM_URL>";
+
+    private static final CharSequence COMMUNICATION_PROTOCOL_PATTERN = "<COMMUNICATION_PROTOCOL>";
+
+    private static final CharSequence INSTANCE_ID_PATTERN = "<INSTANCE_ID>";
+
+    private static final CharSequence ADDITIONAL_PROPERTIES_PATTERN = "<ADDITIONAL_PROPERTIES>";
+
+    private static final CharSequence NODESOURCE_NAME_PATTERN = "<NODESOURCE_NAME>";
+
+    private static final CharSequence NUMBER_OF_NODES_PATTERN = "<NUMBER_OF_NODES>";
+
+    // Command lines definition
+    private static final String POWERSHELL_DOWNLOAD_CMD = "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('http://" +
+                                                          RM_HOSTNAME_PATTERN + ":8080/rest/node.jar" +
+                                                          "', 'node.jar') }\"";
+
+    private static final String WGET_DOWNLOAD_CMD = "wget -nv http://" + RM_HOSTNAME_PATTERN + ":8080/rest/node.jar";
+
+    private static final String START_NODE_CMD = "java -jar node.jar -Dproactive.communication.protocol=" +
+                                                 COMMUNICATION_PROTOCOL_PATTERN + " -Dproactive.pamr.router.address=" +
+                                                 RM_HOSTNAME_PATTERN + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
+                                                 INSTANCE_ID_PATTERN + " " + ADDITIONAL_PROPERTIES_PATTERN + " -r " +
+                                                 RM_URL_PATTERN + " -s " + NODESOURCE_NAME_PATTERN + " -w " +
+                                                 NUMBER_OF_NODES_PATTERN;
+
+    private static final String START_NODE_FALLBACK_CMD = "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
+                                                          INSTANCE_ID_PATTERN + " " + ADDITIONAL_PROPERTIES_PATTERN +
+                                                          " -r " + RM_URL_PATTERN + " -s " + NODESOURCE_NAME_PATTERN +
+                                                          " -w " + NUMBER_OF_NODES_PATTERN;
 
     @Configurable(description = "The MAAS API token")
-    protected String token = null;
+    protected String apiToken = null;
 
     @Configurable(description = "The MAAS endpoint")
     protected String endpoint = null;
@@ -65,23 +127,20 @@ public class MaasInfrastructure extends InfrastructureManager {
     @Configurable(description = "Connector-iaas URL")
     protected String connectorIaasURL = "http://" + generateDefaultRMHostname() + ":8080/connector-iaas";
 
+    @Configurable(description = "Image to deploy (if not specify the default image of the platform will be used)")
+    protected String image = null;
+
+    @Configurable(description = "System ID of the Machine to deploy (if set, minimal resources constraints below will be ignored and only a single machine will be deployed)")
+    protected String systemId = null;
+
+    @Configurable(description = "Minimal amount of CPU")
+    protected String vmMinCpu = null;
+
+    @Configurable(description = "Minimal amount of Memory (MB)")
+    protected String vmMinMem = null;
+
     @Configurable(description = "Total instance to create")
     protected int numberOfInstances = 1;
-
-    @Configurable(description = "The MAC address of the node")
-    protected String macAddress = null;
-
-    @Configurable(description = "The architecture of the node (possible values are 'amd64' and 'i386'")
-    protected String architecture = "amd64";
-
-    @Configurable(description = "The VIRSH address of the node")
-    protected String powerAddress = null;
-
-    @Configurable(description = "The VIRSH id of the node")
-    protected String powerId = null;
-
-    @Configurable(description = "The (optional) VIRSH pass of the node")
-    protected String powerPass = null;
 
     @Configurable(description = "Total nodes to create per instance")
     protected int numberOfNodesPerInstance = 1;
@@ -89,7 +148,11 @@ public class MaasInfrastructure extends InfrastructureManager {
     @Configurable(description = "Command used to download the worker jar")
     protected String downloadCommand = generateDefaultDownloadCommand();
 
+    @Configurable(description = "Optional flag to specify if untrusted (eg. self-signed) certificate are allowed")
+    protected boolean ignoreCertificateCheck = false;
+
     @Configurable(description = "Additional Java command properties (e.g. \"-Dpropertyname=propertyvalue\")")
+    //protected String additionalProperties = "-Dproactive.useIPaddress=true -Dproactive.net.public_address=$(wget -qO- ipinfo.io/ip) -Dproactive.communication.protocol=pnp -Dproactive.pnp.port=64738 -Dproactive.pamr.router.port=";
     protected String additionalProperties = "-Dproactive.useIPaddress=true";
 
     protected ConnectorIaasController connectorIaasController = null;
@@ -104,87 +167,62 @@ public class MaasInfrastructure extends InfrastructureManager {
     }
 
     @Override
-    protected void configure(Object... parameters) {
+    public void configure(Object... parameters) {
 
-        logger.info("Validating parameters : " + parameters);
+        LOGGER.info("Validating parameters : " + Arrays.toString(parameters));
         validate(parameters);
 
-        this.token = parameters[0].toString().trim();
-        this.endpoint = parameters[1].toString().trim();
-        this.rmHostname = parameters[2].toString().trim();
-        this.connectorIaasURL = parameters[3].toString().trim();
-        this.macAddress = parameters[4].toString().trim();
-        this.architecture = parameters[5].toString().trim();
-        this.numberOfInstances = Integer.parseInt(parameters[6].toString().trim());
-        this.numberOfNodesPerInstance = Integer.parseInt(parameters[7].toString().trim());
-        this.powerAddress = parameters[8].toString().trim();
-        this.powerId = parameters[9].toString().trim();
-        this.powerPass = parameters[10].toString().trim();
-        this.downloadCommand = parameters[11].toString().trim();
-        this.additionalProperties = parameters[12].toString().trim();
+        this.apiToken = getParameter(parameters, API_TOKEN_INDEX);
+        this.endpoint = getParameter(parameters, ENDPOINT_INDEX);
+        this.rmHostname = getParameter(parameters, RM_HOSTNAME_INDEX);
+        this.connectorIaasURL = getParameter(parameters, CONNECTOR_IAAS_URL_INDEX);
+        this.image = getParameter(parameters, IMAGE_INDEX);
+        this.systemId = getParameter(parameters, SYSTEM_ID_INDEX);
+        this.vmMinCpu = getParameter(parameters, MIN_CPU_INDEX);
+        this.vmMinMem = getParameter(parameters, MIN_MEM_INDEX);
+        this.numberOfInstances = Integer.parseInt(getParameter(parameters, NUMBER_OF_INSTANCES_INDEX));
+        this.numberOfNodesPerInstance = Integer.parseInt(getParameter(parameters, NUMBER_OF_NODES_PER_INSTANCE_INDEX));
+        this.downloadCommand = getParameter(parameters, DOWNLOAD_COMMAND_INDEX);
+        this.ignoreCertificateCheck = Boolean.parseBoolean(getParameter(parameters, IGNORE_CERTIFICATE_CHECK_INDEX));
+        this.additionalProperties = getParameter(parameters, ADDITIONAL_PROPERTIES_INDEX);
 
         connectorIaasController = new ConnectorIaasController(connectorIaasURL, INFRASTRUCTURE_TYPE);
     }
 
+    private String getParameter(Object[] parameters, int index) {
+        return parameters[index].toString().trim();
+    }
+
     private void validate(Object[] parameters) {
-        if (parameters == null || parameters.length < 12) {
-            throw new IllegalArgumentException("Invalid parameters for MaasInfrastructure creation");
+        if (parameters == null || parameters.length < PARAMETERS_NUMBER) {
+            throw new IllegalArgumentException("Invalid parameters for AzureInfrastructure creation");
         }
 
-        if (parameters[0] == null) {
-            throw new IllegalArgumentException("MAAS API token must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[API_TOKEN_INDEX], "MAAS API apiToken must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[ENDPOINT_INDEX], "MAAS endpoint must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[RM_HOSTNAME_INDEX],
+                                            "The Resource manager hostname must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[CONNECTOR_IAAS_URL_INDEX],
+                                            "The connector-iaas URL must be specified");
+        if (parameters[MIN_CPU_INDEX] == null && parameters[MIN_MEM_INDEX] == null) {
+            throwIllegalArgumentExceptionIfNull(parameters[SYSTEM_ID_INDEX],
+                                                "Wether minimal resources (CPU and/or Memory) or a system ID must be specified.");
         }
+        throwIllegalArgumentExceptionIfNull(parameters[NUMBER_OF_INSTANCES_INDEX],
+                                            "The number of instances to create must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[NUMBER_OF_NODES_PER_INSTANCE_INDEX],
+                                            "The number of nodes per instance to deploy must be specified");
+        throwIllegalArgumentExceptionIfNull(parameters[DOWNLOAD_COMMAND_INDEX],
+                                            "The download node.jar command must be specified");
 
-        if (parameters[1] == null) {
-            throw new IllegalArgumentException("MAAS endpoint must be specified");
+        if (parameters[ADDITIONAL_PROPERTIES_INDEX] == null) {
+            parameters[ADDITIONAL_PROPERTIES_INDEX] = "";
         }
+    }
 
-        if (parameters[2] == null) {
-            throw new IllegalArgumentException("The Resource manager hostname must be specified");
-        }
-
-        if (parameters[3] == null) {
-            throw new IllegalArgumentException("The connector-iaas URL must be specified");
-        }
-
-        if (parameters[4] == null) {
-            throw new IllegalArgumentException("The MAC address must be specified");
-        }
-
-        if (parameters[5] == null) {
-            throw new IllegalArgumentException("The architecture must be specified");
-        }
-
-        if (parameters[6] == null) {
-            throw new IllegalArgumentException("The number of instances to create must be specified");
-        }
-
-        if (parameters[7] == null) {
-            throw new IllegalArgumentException("The number of nodes per instance to deploy must be specified");
-        }
-
-        if (parameters[8] == null) {
-            throw new IllegalArgumentException("The VIRSH power address must be specified");
-        }
-
-        if (parameters[9] == null) {
-            throw new IllegalArgumentException("The VIRSH power id must be specified");
-        }
-
-        if (parameters[10] == null) {
-            parameters[10] = "";
-        }
-
-        if (parameters[11] == null) {
-            throw new IllegalArgumentException("The download node.jar command must be specified");
-        }
-
-        if (parameters[12] == null) {
-            parameters[12] = "";
-        }
-
-        if (parameters[13] == null) {
-            parameters[13] = "";
+    private void throwIllegalArgumentExceptionIfNull(Object parameter, String error) {
+        if (parameter == null) {
+            throw new IllegalArgumentException(error);
         }
     }
 
@@ -193,23 +231,23 @@ public class MaasInfrastructure extends InfrastructureManager {
 
         connectorIaasController.waitForConnectorIaasToBeUP();
 
-        connectorIaasController.createInfrastructure(getInfrastructureId(), "", token, endpoint, false);
-
-        String instanceId = getInfrastructureId();
-
-        // Upload commissioning script first
-        String fullScript = "-c '" + this.downloadCommand + ";nohup " + generateDefaultStartNodeCommand(instanceId) +
-                            "  &'";
-        connectorIaasController.executeScript(getInfrastructureId(), instanceId, Lists.newArrayList(fullScript));
-
-        /*
-         * TODO: need modifications on ConnectorIaasController side to pass all desired options
-         * Set<String> instancesIds;
-         * instancesIds = connectorIaasController.createInstancesWithOptions(getInfrastructureId(),
-         * instanceTag, image,
-         * numberOfInstances, cores, ram, null, null, null, macAddresses);
-         * logger.info("Instances ids created : " + instancesIds);
-         */
+        // Create MAAS infrastructure & instances
+        connectorIaasController.createMaasInfrastructure(getInfrastructureId(),
+                                                         apiToken,
+                                                         endpoint,
+                                                         ignoreCertificateCheck,
+                                                         false);
+        String instanceTag = getInfrastructureId();
+        Set<String> instancesIds;
+        instancesIds = connectorIaasController.createMaasInstances(getInfrastructureId(),
+                                                                   instanceTag,
+                                                                   image,
+                                                                   numberOfInstances,
+                                                                   systemId,
+                                                                   vmMinCpu,
+                                                                   vmMinMem,
+                                                                   Lists.newArrayList(generateScriptWithoutInstanceId()));
+        LOGGER.info("Instances ids created : " + instancesIds);
     }
 
     @Override
@@ -226,17 +264,17 @@ public class MaasInfrastructure extends InfrastructureManager {
             node.getProActiveRuntime().killNode(node.getNodeInformation().getName());
 
         } catch (Exception e) {
-            logger.warn(e);
+            LOGGER.warn("Unable to remove the node '" + node.getNodeInformation().getName() + "' with error: " + e);
         }
 
         synchronized (this) {
             nodesPerInstances.get(instanceId).remove(node.getNodeInformation().getName());
-            logger.info("Removed node : " + node.getNodeInformation().getName());
+            LOGGER.info("Removed node : " + node.getNodeInformation().getName());
 
             if (nodesPerInstances.get(instanceId).isEmpty()) {
                 connectorIaasController.terminateInstance(getInfrastructureId(), instanceId);
                 nodesPerInstances.remove(instanceId);
-                logger.info("Removed instance : " + instanceId);
+                LOGGER.info("Removed instance : " + instanceId);
             }
         }
     }
@@ -256,7 +294,7 @@ public class MaasInfrastructure extends InfrastructureManager {
 
     @Override
     public String getDescription() {
-        return "Handles nodes from Metal As A Service (MAAS).";
+        return "Handles nodes from Microsoft Azure.";
     }
 
     /**
@@ -272,33 +310,56 @@ public class MaasInfrastructure extends InfrastructureManager {
             // best effort, may not work for all machines
             return InetAddress.getLocalHost().getCanonicalHostName();
         } catch (UnknownHostException e) {
-            logger.warn(e);
-            return "localhost";
+            LOGGER.warn("Unable to retrieve local canonical hostname with error: " + e);
+            return DEFAULT_RM_HOSTNAME;
+        }
+    }
+
+    private String generateScriptWithoutInstanceId() {
+        String startNodeCommand = generateStartNodeCommand();
+        if (System.getProperty("os.name").contains("Windows")) {
+            return this.downloadCommand + "; Start-Process -NoNewWindow " + startNodeCommand;
+        } else {
+            return "/bin/bash -c '" + this.downloadCommand + "; nohup " + startNodeCommand + " &'";
         }
     }
 
     private String generateDefaultDownloadCommand() {
         if (System.getProperty("os.name").contains("Windows")) {
-            return "powershell -command \"& { (New-Object Net.WebClient).DownloadFile('" + this.rmHostname +
-                   ":8080/rest/node.jar" + "', 'node.jar') }\"";
+            return POWERSHELL_DOWNLOAD_CMD.replace(RM_HOSTNAME_PATTERN, this.rmHostname);
         } else {
-            return "wget -nv " + this.rmHostname + ":8080/rest/node.jar";
+            return WGET_DOWNLOAD_CMD.replace(RM_HOSTNAME_PATTERN, this.rmHostname);
         }
     }
 
-    private String generateDefaultStartNodeCommand(String instanceId) {
+    private String generateStartNodeCommand() {
         try {
-            String rmUrlToUse = rmUrl;
+            String communicationProtocol = rmUrl.split(":")[0];
+            String startNodeCommand = START_NODE_CMD.replace(COMMUNICATION_PROTOCOL_PATTERN, communicationProtocol)
+                                                    .replace(RM_HOSTNAME_PATTERN, rmHostname)
+                                                    .replace(ADDITIONAL_PROPERTIES_PATTERN, additionalProperties)
+                                                    .replace(RM_URL_PATTERN, rmUrl)
+                                                    .replace(NODESOURCE_NAME_PATTERN, nodeSource.getName())
+                                                    .replace(NUMBER_OF_NODES_PATTERN,
+                                                             String.valueOf(numberOfNodesPerInstance));
+            if (systemId != null && !systemId.isEmpty()) {
+                startNodeCommand = startNodeCommand.replace(INSTANCE_ID_PATTERN, systemId);
+            }
+            return startNodeCommand;
 
-            String protocol = rmUrlToUse.substring(0, rmUrlToUse.indexOf(':')).trim();
-            return "java -jar node.jar -Dproactive.communication.protocol=" + protocol +
-                   " -Dproactive.pamr.router.address=" + rmHostname + " -D" + INSTANCE_ID_NODE_PROPERTY + "=" +
-                   instanceId + " " + additionalProperties + " -r " + rmUrlToUse + " -s " + nodeSource.getName() +
-                   " -w " + numberOfNodesPerInstance;
         } catch (Exception e) {
-            logger.error("Exception when generating the command, fallback on default value", e);
-            return "java -jar node.jar -D" + INSTANCE_ID_NODE_PROPERTY + "=" + instanceId + " " + additionalProperties +
-                   " -r " + rmUrl + " -s " + nodeSource.getName() + " -w " + numberOfNodesPerInstance;
+            LOGGER.error("Exception when generating the command, fallback on default value", e);
+            String startNodeFallbackCommand = START_NODE_FALLBACK_CMD.replace(ADDITIONAL_PROPERTIES_PATTERN,
+                                                                              additionalProperties)
+                                                                     .replace(RM_URL_PATTERN, rmUrl)
+                                                                     .replace(NODESOURCE_NAME_PATTERN,
+                                                                              nodeSource.getName())
+                                                                     .replace(NUMBER_OF_NODES_PATTERN,
+                                                                              String.valueOf(numberOfNodesPerInstance));
+            if (systemId != null && !systemId.isEmpty()) {
+                startNodeFallbackCommand = startNodeFallbackCommand.replace(INSTANCE_ID_PATTERN, systemId);
+            }
+            return startNodeFallbackCommand;
         }
     }
 
@@ -313,4 +374,5 @@ public class MaasInfrastructure extends InfrastructureManager {
     private String getInfrastructureId() {
         return nodeSource.getName().trim().replace(" ", "_").toLowerCase();
     }
+
 }
